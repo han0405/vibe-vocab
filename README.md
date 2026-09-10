@@ -1,8 +1,9 @@
 <p align="center">
-  <img src="vocab.png" alt="VibeVocab — vibe-code in your language, pick up the English along the way" width="820">
+  <img src="vocab.png" alt="VibeVocab" width="820">
 </p>
 <p align="center">
-  <em>用母语 vibe coding，顺手把技术英语记下来。</em>
+  用你熟悉的语言 Vibe Coding，顺手学会英语<br>
+  <em>Vibe-code in your own language. Pick up the English along the way</em>
 </p>
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" alt="License"></a>

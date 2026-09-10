@@ -1,8 +1,9 @@
 <p align="center">
-  <img src="../../vocab.png" alt="VibeVocab — 모국어로 vibe coding 하면서 기술 영어를 익히세요" width="820">
+  <img src="../../vocab.png" alt="VibeVocab" width="820">
 </p>
 <p align="center">
-  <em>모국어로 vibe coding 하면서, 기술 영어를 자연스럽게 익히세요.</em>
+  익숙한 언어로 Vibe Coding, 영어는 그 김에<br>
+  <em>Vibe-code in your own language. Pick up the English along the way</em>
 </p>
 <p align="center">
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" alt="라이선스"></a>
