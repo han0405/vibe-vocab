@@ -122,6 +122,12 @@ const acr = harvestGlossedTerms('这个接口要保证 idempotent（同一 HTTP 
 ok(acr.length === 1 && acr[0].term === 'idempotent', 'gloss with a short all-caps acronym (HTTP) survives');
 const hi = harvestGlossedTerms('यह फ़ंक्शन अब idempotent (एक जैसा असर) है। आगे टेस्ट जोड़ें।');
 ok(hi.length === 1 && !/जोड़ें/.test(hi[0].context), 'Hindi context stops at the danda, not the paragraph');
+const hiLong = harvestGlossedTerms('हमें cache penetration (कैश में सीधी पहुँच) से बचना ज़रूरी है।');
+ok(hiLong.length === 1 && hiLong[0].term === 'cache penetration', 'Hindi multi-word gloss (>14 chars) now harvested');
+const arLong = harvestGlossedTerms('يجب تجنب cache penetration (اختراق التخزين المؤقت) لحماية قاعدة البيانات.');
+ok(arLong.length === 1 && arLong[0].term === 'cache penetration', 'Arabic longer gloss now harvested');
+const aside = harvestGlossedTerms('这个接口有 SLA（服务等级协议，不是别的东西）的要求。');
+ok(aside.length === 0, 'long CJK clarifying aside with a comma is still rejected');
 
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nAll green.');

@@ -8,22 +8,24 @@ harvester in `lib/vocab-store.js` (`harvestGlossedTerms`).
 Date: 2026-09-10. Languages probed: Japanese, Korean, Hindi, Arabic, Spanish,
 plus Vietnamese / Portuguese for the Latin-script edge.
 
+**Scope decision:** support **non-Latin scripts**; Latin-script native
+languages are explicitly out of scope. Findings 2–4 are fixed. Finding 1
+(Latin) is left as a documented non-goal.
+
 ## Summary
 
-| Language | Script | Basic gloss harvested? | Notes |
+| Language | Script | Gloss harvested? | Notes |
 |---|---|---|---|
-| Japanese | Kanji/Kana | ✅ yes | `（冪等）` → `idempotent \| 冪等`. Full-width parens, `。！？` boundaries all handled. |
-| Korean | Hangul | ✅ yes | `(멱등성)` → clean. ASCII parens fine. |
-| Hindi | Devanagari | ⚠️ partial | 1–2 word gloss works; 3-word gloss exceeds the 14-char cap and is lost; sentence context over-runs the `।` danda. |
-| Arabic | Arabic (RTL) | ⚠️ partial | Short gloss works; longer gloss hits the 14-char cap. Log row renders bidi-mixed but readable. |
-| Spanish / Portuguese / Vietnamese / any **Latin script** | Latin | ❌ no | Gloss is (mostly) ASCII letters → dropped by design. See finding 1. |
-
-Japanese and Korean are effectively first-class. Hindi and Arabic work for
-short glosses. Latin-script languages do not work.
+| Chinese | Han | ✅ first-class | The language it was tuned on. |
+| Japanese | Kanji/Kana | ✅ first-class | `（冪等）` → `idempotent \| 冪等`. Full-width parens, `。！？` boundaries handled. |
+| Korean | Hangul | ✅ first-class | `(멱등성)` → clean. ASCII parens fine. |
+| Hindi | Devanagari | ✅ supported | Multi-word glosses now fit (cap raised to 40); context stops at the `।` danda. |
+| Arabic | Arabic (RTL) | ✅ supported | Longer glosses now fit. Log row renders bidi-mixed but readable. |
+| Spanish / Portuguese / Vietnamese / any **Latin script** | Latin | ❌ out of scope | Gloss is (mostly) ASCII letters → indistinguishable from an English aside. See finding 1. |
 
 ## Findings, most to least fundamental
 
-### 1. Latin-script glosses are dropped — by design, and now doubly so
+### 1. Latin-script glosses are dropped — by design *(out of scope, not fixed)*
 
 The entire "this parenthetical is a real gloss, not an English aside like
 `SLA (service level agreement)`" signal is **`hasNonAscii(gloss)`**. A Spanish
@@ -37,31 +39,29 @@ characters. **Today's clarifying-aside guard (`/[A-Za-z]{2,}/` in
 2+-letter ASCII runs. So the Latin-script story regressed from "works if the
 gloss happens to contain an accent" to "never works".
 
-**This is not a small fix.** Distinguishing a Spanish gloss from an English
-clarifying aside needs a real signal — most likely an explicit
-`userLanguage` / locale setting (from `/vocab` or a config file) that switches
-the harvester into a mode where an ASCII gloss *is* expected, plus a small
-English-stopword check to still reject `(service level agreement)`. Until then,
-Latin-script native languages should be considered **unsupported**, and the
-README / rules should say so rather than implying "any language".
+**Decision: out of scope.** Distinguishing a Spanish gloss from an English
+clarifying aside needs a real signal — an explicit `userLanguage` / locale
+setting plus an English-stopword check. Not doing it. The README and this doc
+say Latin-script native languages are unsupported. (Reversing this later: add
+the locale setting, then relax `hasNonAscii(gloss)` and the ASCII-run guard
+when a Latin locale is active.)
 
-### 2. The 14-character gloss cap is calibrated for CJK density
+### 2. The 14-character gloss cap was calibrated for CJK density  *(fixed 2026-09-10)*
 
-`GLOSS_RE` caps the gloss at `[^）)]{1,14}`. Chinese fits a concept in ≤5
+`GLOSS_RE` capped the gloss at `[^）)]{1,14}`. Chinese fits a concept in ≤5
 characters; Devanagari and Arabic need more code points (combining marks,
-longer words, spaces) for the same meaning:
+longer words, spaces between words) for the same meaning:
 
-- Hindi `cache penetration (कैश में सीधी पहुँच)` — **lost**, gloss is >14.
-- Arabic `cache penetration (اختراق التخزين المؤقت)` — **lost**, gloss is >14.
+- Hindi `cache penetration (कैश में सीधी पहुँच)` — was lost, gloss is >14.
+- Arabic `cache penetration (اختراق التخزين المؤقت)` — was lost, gloss is >14.
 
-The prompt tells the model `≤5 CJK characters or ~3 words`; the "~3 words"
-branch routinely produces a >14-char gloss that the harvester then silently
-drops — prompt and harvester disagree.
-
-**Suggested fix:** raise the cap to ~40 and lean on `looksLikeGloss` +
-the junk-symbol / space checks to reject non-glosses. Needs a re-run of the
-Chinese smoke tests to confirm no new false positives (a longer window could
-catch more sentence fragments).
+**Applied:** cap raised to `{1,40}` (both in `GLOSS_RE` and in the
+context-cleanup replace). To keep the wider window from swallowing a clarifying
+aside, `looksLikeGloss` now also rejects any gloss containing CJK sentence /
+clause punctuation (`，、。；：！？…「」『』（）`) — a real noun-phrase gloss
+(`幂等`, `反向传播`, `最终一致性`) never has these; an enumeration or aside
+(`服务等级协议，不是别的`) does. Chinese smoke suite re-run: all green, plus a
+new negative assertion for the comma-aside case.
 
 ### 3. Non-Latin sentence boundaries are missing from `CTX_MARKS`  *(fixed 2026-09-10)*
 
@@ -95,14 +95,17 @@ single particles; a one-character gloss is uncommon enough to accept the loss.
 
 ## What was changed vs. only noted
 
-- **Changed** (`lib/vocab-store.js`): findings 3 and 4 — additive, and covered
-  by `npm test` plus two new Japanese/Korean assertions.
-- **Noted only**: findings 1, 2, 5 — each needs a product decision (locale
-  setting; cap raise + Chinese re-test; accept the edge). None applied yet.
+- **Fixed** (`lib/vocab-store.js`, all covered by `npm test`):
+  - Finding 2 — gloss length cap 14 → 40, plus CJK-punctuation reject in
+    `looksLikeGloss` as the backstop.
+  - Finding 3 — `।` `۔` `؟` added to `CTX_MARKS`.
+  - Finding 4 — acronym-aware ASCII-run guard (short ALL-CAPS runs survive).
+- **Out of scope**: finding 1 (Latin script) — deliberate non-goal.
+- **Accepted**: finding 5 (single-character CJK gloss) — too rare to justify
+  the false-positive risk of loosening `letters >= 2`.
 
 ## Bottom line
 
-Ship-ready today for **Chinese, Japanese, Korean**. Usable with the cap raise
-(finding 2) for **Hindi, Arabic** and other non-Latin scripts. **Latin-script**
-native languages (Spanish, Portuguese, French, Vietnamese, Indonesian, …) need
-finding 1's locale work before they can be claimed as supported.
+Supported: **Chinese, Japanese, Korean** (first-class) and **Hindi, Arabic**
+and other non-Latin scripts. Not supported: **Latin-script** native languages
+(Spanish, Portuguese, French, Vietnamese, Indonesian, …).
