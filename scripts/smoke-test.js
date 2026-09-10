@@ -129,6 +129,42 @@ ok(arLong.length === 1 && arLong[0].term === 'cache penetration', 'Arabic longer
 const aside = harvestGlossedTerms('这个接口有 SLA（服务等级协议，不是别的东西）的要求。');
 ok(aside.length === 0, 'long CJK clarifying aside with a comma is still rejected');
 
+// 8. per-reply gloss budget: /vocab rate, session-start override, harvester cap
+const { readRate } = require(path.join(root, 'lib/vocab-store.js'));
+const runReport = (args) =>
+  execFileSync('node', [path.join(root, 'scripts/report.js'), tmp, ...args], {
+    encoding: 'utf8',
+    env: Object.assign({}, process.env, { CLAUDE_CONFIG_DIR: tmp }),
+  });
+
+ok(readRate(tmp) === 1, 'readRate defaults to 1 with no flag');
+
+runReport(['on']); // session-start only emits when enabled
+const rateSet = runReport(['rate', '3']);
+ok(fs.readFileSync(path.join(tmp, '.vibe-vocab-rate'), 'utf8').trim() === '3', '/vocab rate 3 writes the flag');
+ok(/budget set to 3/.test(rateSet), 'rate report confirms the new budget');
+ok(readRate(tmp) === 3, 'readRate picks up 3');
+
+const injectedRate = runStart();
+ok(/rate 3/.test(injectedRate) && /budget override/i.test(injectedRate), 'session-start appends the budget override at rate 3');
+ok(/Per-reply gloss budget: 3\./.test(injectedRate), 'session-start header notes the budget');
+
+const clamp = runReport(['rate', '99']);
+ok(fs.readFileSync(path.join(tmp, '.vibe-vocab-rate'), 'utf8').trim() === '5', 'rate 99 is clamped to 5');
+ok(/capped at 5/.test(clamp), 'rate report notes the cap');
+ok(/Gloss budget\s+: 5 per reply/.test(runReport([])), 'summary shows the configured budget');
+
+runReport(['rate', 'off']);
+ok(!fs.existsSync(path.join(tmp, '.vibe-vocab-rate')), '/vocab rate off removes the flag');
+ok(readRate(tmp) === 1 && !/budget override/i.test(runStart()), 'back to the default once reset');
+runReport(['off']);
+
+// harvester cap scales with the explicit limit it is handed
+const fourGloss = '这是 alpha（甲类）和 beta（乙类）和 gamma（丙类）和 delta（丁类）';
+ok(harvestGlossedTerms(fourGloss).length === 3, 'default harvest cap stays 3');
+ok(harvestGlossedTerms(fourGloss, 5).length === 4, 'harvest honours a higher cap');
+ok(harvestGlossedTerms(fourGloss, 2).length === 2, 'harvest honours a lower cap');
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nAll green.');
 process.exit(failures ? 1 : 0);

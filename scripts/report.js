@@ -4,13 +4,26 @@
 //   node report.js <projectDir>                 -> print the vocab-log summary
 //   node report.js <projectDir> focus <domain>  -> copy a word pack into vocab-focus.md
 //   node report.js <projectDir> focus off       -> remove vocab-focus.md
+//   node report.js <projectDir> rate <1-5>      -> set the per-reply gloss budget
+//   node report.js <projectDir> rate off        -> reset the budget to the default (1)
 //
 // Prints a plain-text report to stdout; the command file tells Claude to relay
 // it verbatim.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { canonicalCwd, existingTerms, localDate, LOG_NAME } = require('../lib/vocab-store');
+const {
+  canonicalCwd,
+  readRate,
+  clampRate,
+  existingTerms,
+  localDate,
+  LOG_NAME,
+  RATE_FILE,
+  RATE_MIN,
+  RATE_MAX,
+  RATE_DEFAULT,
+} = require('../lib/vocab-store');
 
 const projectDir = canonicalCwd(process.argv[2] || process.cwd());
 const sub = (process.argv[3] || '').toLowerCase();
@@ -44,6 +57,58 @@ if (sub === 'on' || sub === 'off') {
     } catch (e) {
       console.log(`VibeVocab was not enabled for ${label}.`);
     }
+  }
+  process.exit(0);
+}
+
+if (sub === 'rate') {
+  const wantGlobal = (process.argv[5] || '').toLowerCase() === 'always';
+  const target = wantGlobal
+    ? path.join(
+        process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'),
+        RATE_FILE
+      )
+    : path.join(projectDir, RATE_FILE);
+  const label = wantGlobal ? 'always-on (all projects)' : 'this project';
+
+  if (!arg) {
+    console.log(`Per-reply gloss budget: ${readRate(projectDir)} (default ${RATE_DEFAULT}).`);
+    console.log(`Change it:  /vocab rate <${RATE_MIN}-${RATE_MAX}>   (add "always" for every project)`);
+    console.log('Reset it :  /vocab rate off');
+    process.exit(0);
+  }
+
+  if (arg === 'off' || arg === 'none' || arg === 'default' || arg === String(RATE_DEFAULT)) {
+    let removed = false;
+    try {
+      fs.unlinkSync(target);
+      removed = true;
+    } catch (e) {
+      /* nothing to reset at this scope */
+    }
+    console.log(
+      removed
+        ? `Per-reply gloss budget reset to the default (${RATE_DEFAULT}) for ${label}.`
+        : `Per-reply gloss budget for ${label} was already at the default (${RATE_DEFAULT}).`
+    );
+    process.exit(0);
+  }
+
+  const requested = parseInt(arg, 10);
+  if (!Number.isFinite(requested) || requested < 1) {
+    console.log(`Usage: /vocab rate <${RATE_MIN}-${RATE_MAX}>   (or  /vocab rate off  to reset)`);
+    process.exit(0);
+  }
+  const n = clampRate(requested);
+  try {
+    fs.writeFileSync(target, n + '\n', 'utf8');
+    console.log(`Per-reply gloss budget set to ${n} for ${label}.`);
+    if (n !== requested) {
+      console.log(`(Requested ${requested}; capped at ${RATE_MAX} — VibeVocab is a habit, not a glossary.)`);
+    }
+    console.log('Applies from the next session. To apply it now, run  /vocab on  again this session.');
+  } catch (e) {
+    console.log('Could not write the rate file: ' + e.message);
   }
   process.exit(0);
 }
@@ -86,7 +151,9 @@ if (sub === 'focus') {
   const body = fs.readFileSync(path.join(packDir, arg + '.md'), 'utf8');
   fs.writeFileSync(focusFile, body, 'utf8');
   console.log(`Active mode on: "${arg}" word pack written to vocab-focus.md.`);
-  console.log('Claude will now look for natural openings to use those terms (still max 2 new / reply).');
+  console.log(
+    `Claude will now look for natural openings to use those terms (still within your per-reply gloss budget: ${readRate(projectDir)}).`
+  );
   console.log('Turn it off with: /vocab focus off');
   process.exit(0);
 }
@@ -98,6 +165,7 @@ try {
 } catch (e) {
   console.log('No vocab-log.md yet in this project.');
   console.log('VibeVocab is ' + enabledStatus() + '.');
+  console.log(`Gloss budget: ${readRate(projectDir)} per reply  (change with  /vocab rate <${RATE_MIN}-${RATE_MAX}>).`);
   console.log('The log is created automatically the first time Claude glosses a new term.');
   const packs = listPacks();
   if (packs.length) console.log('\nWord packs you can activate: ' + packs.join(', '));
@@ -136,6 +204,7 @@ try {
   /* passive mode */
 }
 console.log(`Mode              : ${focusName ? 'Active (' + focusName + ')' : 'Passive'}`);
+console.log(`Gloss budget      : ${readRate(projectDir)} per reply  (change with  /vocab rate <${RATE_MIN}-${RATE_MAX}>)`);
 console.log(`Enabled           : ${enabledStatus()}`);
 
 const recent = rows.slice(-12).reverse();

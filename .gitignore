@@ -1,6 +1,7 @@
 # Local activation flags (per-project / per-user state, never shared)
 .vibe-vocab-on
 .vibe-vocab-always
+.vibe-vocab-rate
 
 # Runtime output — the user's own word log / focus pack, written by the hooks
 vocab-log.md

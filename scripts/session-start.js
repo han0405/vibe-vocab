@@ -34,11 +34,35 @@ try {
     .replace(/^---[^\S\r\n]*\r?\n[\s\S]*?\r?\n---[^\S\r\n]*(?:\r?\n|$)/, '')
     .replace(/(?:\r?\n)+$/, '');
 
+  // Per-reply gloss budget. The ruleset is written for 1; when the user has
+  // raised it with `/vocab rate <n>`, append an override rather than rewriting
+  // the (blind-eval-tuned) rules text.
+  let rate = 1;
+  let override = '';
+  try {
+    rate = require('../lib/vocab-store').readRate(cwd);
+  } catch (e) {
+    /* lib unavailable -- fall back to the default budget */
+  }
+  if (rate > 1) {
+    override =
+      `\n\n## Per-reply budget override (user set \`/vocab rate ${rate}\`)\n\n` +
+      `The checklist above is written for one gloss per reply. The user has raised ` +
+      `the budget to **${rate}**. Wherever it says "more than 1 is a bug" or "keep ` +
+      `only the single most central concept", read the limit as **${rate}**: pick the ` +
+      `up-to-${rate} most central concepts that each independently clear the "which ` +
+      `concept gets the slot" bar, gloss each once on first use, and rewrite the rest ` +
+      `in the user's language. Fewer than ${rate} is fine when the reply doesn't ` +
+      `genuinely turn on that many. Every other rule is unchanged — never in code, ` +
+      `comments, headings, or identifiers; one gloss per concept; bare on reuse.\n`;
+  }
+
   const scope = globalOn ? 'always-on' : 'this project';
+  const budgetNote = rate > 1 ? ` Per-reply gloss budget: ${rate}.` : '';
   process.stdout.write(
-    `VIBEVOCAB ACTIVE (${scope}). The rules below apply to every reply this session. ` +
+    `VIBEVOCAB ACTIVE (${scope}).${budgetNote} The rules below apply to every reply this session. ` +
       'Say "别标注" / "focus" to pause for the session; ' +
-      `run \`/vocab off\` to disable it for this project.\n\n${body}\n`
+      `run \`/vocab off\` to disable it for this project.\n\n${body}${override}\n`
   );
 } catch (e) {
   process.exit(0);

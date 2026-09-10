@@ -10,6 +10,7 @@
 // Always exits 0. A vocabulary logger must never block or delay a turn.
 const {
   readStdinJSON,
+  readRate,
   readLastAssistantText,
   harvestGlossedTerms,
   appendTerms,
@@ -20,7 +21,9 @@ try {
   const cwd = input.cwd || process.cwd();
   const transcriptPath = input.transcript_path || input.transcriptPath;
   const text = readLastAssistantText(transcriptPath);
-  const terms = harvestGlossedTerms(text);
+  // Safety cap: the configured per-reply budget plus one slack slot, but never
+  // below the historical floor of 3.
+  const terms = harvestGlossedTerms(text, Math.max(3, readRate(cwd) + 1));
   appendTerms(cwd, terms);
 } catch (e) {
   /* swallow -- never break the turn */

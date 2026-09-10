@@ -61,13 +61,16 @@ Remove-Item D:\Project\vibe-vocab\_payload-capture.txt
 Run `/vocab on` in a project where you actually code in your native language,
 then work normally — don't perform for it. Watch for:
 
-- **Term selection.** Is the single gloss each turn the concept your request was
-  really about, not a supporting idea picked up mid-explanation?
+- **Term selection.** Is the gloss (or, above `/vocab rate 1`, each gloss) the
+  concept your request was really about, not a supporting idea picked up
+  mid-explanation?
 - **Missed / bogus captures.** Skim `vocab-log.md`: anything that should have
   been logged but wasn't (gloss hidden in a code comment or heading)? Any junk
   rows (a clarifying parenthetical mistaken for a gloss)?
-- **Frequency feel.** Long replies should still carry exactly one gloss. Does it
-  ever feel like a vocabulary quiz?
+- **Frequency feel.** At the default rate, long replies should still carry
+  exactly one gloss; at a higher `/vocab rate`, no more than that many, and
+  fewer when the reply doesn't turn on that many. Does it ever feel like a
+  vocabulary quiz?
 - **Silence reliability.** Mid-debug, does "focus" / "别标注" actually stop it
   for the rest of the session?
 
