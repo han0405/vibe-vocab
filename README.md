@@ -183,7 +183,7 @@ npm test
 
 离线跑一遍收割、去重、报告和多语言的全套检查，不需要 Claude Code。
 
-### 已知限制（v0.1）
+### 已知限制（v0.2）
 
 - 只收割严格符合 `术语（短注释）`、且注释含非 ASCII 字符的首次提及。换个说法点出术语就不入库（不过你还是读到了）。
 - 术语提取会抓括号前最多 4 个词，措辞不寻常时可能把多词术语截断。
@@ -379,7 +379,7 @@ npm test
 Runs harvest, dedupe, report, and multi-language checks offline. No Claude Code
 needed.
 
-### Known limits (v0.1)
+### Known limits (v0.2)
 
 - Only first mentions that match `term（short gloss）` with a non-ASCII character in the gloss get harvested. Terms introduced some other way stay out of the log — though you still read them.
 - Term extraction grabs up to 4 words before the parenthesis, so unusual phrasing can clip a multi-word term.
