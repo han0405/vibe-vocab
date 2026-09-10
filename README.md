@@ -187,6 +187,7 @@ npm test
 
 - 只收割严格符合 `术语（短注释）`、且注释含非 ASCII 字符的首次提及。换个说法点出术语就不入库（不过你还是读到了）。
 - 术语提取会抓括号前最多 4 个词，措辞不寻常时可能把多词术语截断。
+- 纯大写缩写（`DPO`、`API`、`SLA`……）后面的括注当作「展开/分类」而非生词，不入库；加粗行内标题、box-drawing 表格里的括注同样跳过。
 - 「已学过就裸用」靠 session-start 注入生词本里最近 120 个术语；更早的词若被重新标注，收割器会去重、不会重复入库，但你可能偶尔多看到一次注释。
 - 每段标几个词由 `/vocab rate` 调（默认 1，上限 5）；具体选哪个词仍全靠 prompt 控制，还需要在真实使用里继续调——见 `docs/DOGFOODING.md`。
 
@@ -383,6 +384,7 @@ needed.
 
 - Only first mentions that match `term（short gloss）` with a non-ASCII character in the gloss get harvested. Terms introduced some other way stay out of the log — though you still read them.
 - Term extraction grabs up to 4 words before the parenthesis, so unusual phrasing can clip a multi-word term.
+- A parenthetical after a bare all-caps acronym (`DPO`, `API`, `SLA`, …) is treated as an expansion/label, not vocabulary, and is skipped — as are glosses in bold run-in headers or box-drawing table cells.
 - "Already learned → use bare" works off the most recent 120 terms in the log, injected at session start. An older term that gets re-glossed is de-duplicated by the harvester (no repeat row), but you might see the gloss once more.
 - How many terms per reply is set by `/vocab rate` (default 1, capped at 5); *which* term still rides on prompt control and needs tuning against real use — see `docs/DOGFOODING.md`.
 

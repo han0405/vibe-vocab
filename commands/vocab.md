@@ -20,10 +20,19 @@ command by hand from a regular terminal.
 The `report.js` call above wrote the persistence flag, but that only injects the
 rules at the *start* of future sessions. To make VibeVocab take effect **right
 now**, also read `${CLAUDE_PLUGIN_ROOT}/rules/vibe-vocab.md` and follow those
-rules for the rest of this session. If `.vibe-vocab-rate` exists in the project
-root (or `$CLAUDE_CONFIG_DIR`), treat the integer in it as the per-reply gloss
-budget instead of 1. Then tell the user, in one line, that VibeVocab is now
-active for this session.
+rules for the rest of this session. Check the project root (and
+`$CLAUDE_CONFIG_DIR`) for these flag files and honour them too:
+
+- `.vibe-vocab-rate` — the integer is the per-reply gloss budget (else 1).
+- `.vibe-vocab-level` — `beginner` / `advanced` shifts the "which concept gets
+  the slot" bar (see the `level` step below); absent or `mid` = the shipped rule.
+- `.vibe-vocab-known` — treat every term listed there (and every term already in
+  `vocab-log.md`) as already-learned: use it bare, no gloss.
+
+Then tell the user, in one line, that VibeVocab is now active for this session.
+
+Note: a brand-new session is the reliable way to pick up flag changes — the
+SessionStart hook re-reads all of them and re-injects the override blocks.
 
 ## Step 2 — only if the argument is `rate`
 

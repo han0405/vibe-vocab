@@ -244,6 +244,41 @@ ok(readLevel(tmp) === 'mid' && !/Vocabulary level: (beginner|advanced)/.test(run
 ok(/Vocabulary level  : mid/.test(runReport([])), 'summary shows the vocabulary level');
 runReport(['off']);
 
+// 13. harvester false-positive fixes (from the first real dogfood, see
+//     docs/DOGFOODING-FINDINGS.md finding 1)
+
+// 13a. bare all-caps acronym term -> the parenthetical is an expansion / label
+const acro = harvestGlossedTerms(
+  '这里 DPO（离线）和 GRPO（在线）是两条路线，SLA（服务等级协议）另说。'
+);
+ok(acro.length === 0, 'bare acronym terms (DPO / GRPO / SLA) are not harvested');
+// a real term that merely starts with capitals still gets in
+const rlTerm = harvestGlossedTerms('这属于 Reinforcement Learning（强化学习）的范畴。');
+ok(rlTerm.length === 1 && rlTerm[0].term === 'Reinforcement Learning', 'a capitalised multi-word term still harvests');
+
+// 13b. box-drawing table cell bounds the context (│ U+2502)
+const boxed = harvestGlossedTerms(
+  '│ 这一步做 idempotent（幂等）处理 │ 否则重复扣款 │'
+);
+ok(boxed.length === 1 && boxed[0].term === 'idempotent', 'gloss inside a box-drawing row still harvests');
+ok(!/否则重复扣款/.test(boxed[0].context), 'box-drawing vertical bounds the context sentence');
+
+// 13c. bold run-in header lines are ineligible
+const runin = harvestGlossedTerms(
+  [
+    '关键点：',
+    '- **chat template（对话模板）** — apply_chat_template 把消息拼成固定字符串。',
+    '1. **loss masking（只训练回答）**：把 prompt 部分的 label 设成 -100。',
+    '**LoRA（低秩适配）**',
+    '正文里 back-pressure（背压）让生产者减速，这一个要留。',
+  ].join('\n')
+);
+const runinTerms = runin.map((t) => t.term).sort();
+ok(
+  runinTerms.length === 1 && runinTerms[0] === 'back-pressure',
+  'bold run-in header glosses dropped, the prose gloss kept'
+);
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nAll green.');
 process.exit(failures ? 1 : 0);
