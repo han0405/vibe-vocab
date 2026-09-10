@@ -2,10 +2,13 @@
 .vibe-vocab-on
 .vibe-vocab-always
 .vibe-vocab-rate
+.vibe-vocab-known
+.vibe-vocab-level
 
-# Runtime output — the user's own word log / focus pack, written by the hooks
+# Runtime output — the user's own word log / focus pack / export, written by the hooks
 vocab-log.md
 vocab-focus.md
+vocab-anki.csv
 
 # Scratch fixtures created by the prompt-evaluation pass
 scripts/fixtures/eval-*.txt

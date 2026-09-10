@@ -86,5 +86,5 @@ use that data to decide:
 2. Whether residual risks 6.2 / 6.3 in `PROMPT-ITERATION-RESULTS.md` (gloss
    wording drift, occasional reversed asides) actually bother you or can keep
    being tolerated.
-3. For a non-CJK native language, see `MULTILANG-FINDINGS.md` first — the
-   harvester currently assumes a non-Latin-script gloss.
+3. For a non-CJK native language, see `MULTILANG-FINDINGS.md` first — VibeVocab
+   is built for CJK and other non-Latin scripts (Devanagari, Arabic, …).

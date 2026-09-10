@@ -16,9 +16,7 @@
   <a href="#中文"><strong>🇨🇳 中文</strong></a> ·
   <a href="#english"><strong>🇬🇧 English</strong></a> ·
   <a href="docs/i18n/README.ja.md">🇯🇵 日本語</a> ·
-  <a href="docs/i18n/README.ko.md">🇰🇷 한국어</a> ·
-  <a href="docs/i18n/README.pt-BR.md">🇧🇷 Português (Brasil)</a> ·
-  <a href="docs/i18n/README.vi.md">🇻🇳 Tiếng Việt</a>
+  <a href="docs/i18n/README.ko.md">🇰🇷 한국어</a>
 </p>
 
 ---
@@ -94,7 +92,7 @@
 |---|---|
 | `rules/vibe-vocab.md` + `scripts/session-start.js` | `SessionStart` hook，启用时把规则注入会话。 |
 | `hooks/hooks.json` + `scripts/log-vocab.js` | `Stop` hook，每轮回复后收割新术语进 `vocab-log.md`，从不阻塞回复。 |
-| `commands/vocab.md` | `/vocab on`、`/vocab off`、`/vocab`（看生词本）、`/vocab focus <领域>`（主动模式）、`/vocab rate <1-5>`（每段标几个词）。 |
+| `commands/vocab.md` | `/vocab on`、`/vocab off`、`/vocab`（看生词本）、`/vocab focus <领域>`（主动模式）、`/vocab rate <1-5>`（每段标几个词）、`/vocab level`（难度门槛）、`/vocab know`（标已会的词）、`/vocab export`（导出 CSV）。 |
 | `wordpacks/*.md` | 精选词表：`frontend`、`backend`、`ml`、`or-stats`、`devops`。 |
 
 ### 启用
@@ -132,14 +130,50 @@ Claude Code v2 没有 `/output-style`，所以用「flag 文件 + hook」来激�
 上限 5——再多就成单词表了。写进项目根目录的 `.vibe-vocab-rate`，下次会话生效；
 想当场生效再跑一次 `/vocab on`。后台收割器的安全上限也会跟着抬高，多标的词不会漏收。
 
+### 什么词值得标：难度门槛
+
+同一段回复，初学者和老手想被标的词不一样。`/vocab level` 调这个门槛：
+
+```
+/vocab level beginner   # 日常工程词也标：deploy、dependency、cache、race condition……
+/vocab level mid         # 默认：你「大概见过、说不太准」的词
+/vocab level advanced    # 只标真正专业、精确的词；大多数回复一个都不标
+```
+
+`mid` 就是现在的行为，装了不设也一样。`advanced` 下 Claude 会克制到「没有合适的就不标」，
+不硬凑。写进 `.vibe-vocab-level`（加 `always` 存全局），下次会话生效；当场生效再跑 `/vocab on`。
+
+### 已经会的词，不再标注
+
+**进过 `vocab-log.md` 的词，下次会话自动裸用**，不再解释——session-start 会把最近学过的
+术语一并注入会话，Claude 拿它当「本轮已出现过」处理，不浪费当条回复的名额。所以大多数情况
+你**不用手动标**。
+
+只有一种情况需要手动：某些词你**在装 VibeVocab 之前就会了**，不想被标哪怕一次。批量加就行：
+
+```
+/vocab know idempotent, mutex, back-pressure   # 一次加多个
+/vocab know backend                            # 直接把整个词包标为已会
+/vocab forget mutex                            # 撤销
+/vocab forget all                              # 清空
+```
+
+存到 `.vibe-vocab-known`（加 `always` 存全局）。`/vocab`（无参数）会显示已标记的数量。
+
+### 导出复习
+
+```
+/vocab export
+```
+
+把 `vocab-log.md` 写成 `vocab-anki.csv`——[Anki](https://apps.ankiweb.net)（一个免费的
+间隔重复记忆卡片工具）里 `File → Import` 直接导入：第 1 列作正面（英文术语），第 2 列作背面
+（释义），第 3、4 列是语境和日期。同一个文件用 Excel / Google Sheets / Numbers 也能直接打开。
+
 ### 语言支持
 
 为**中文**打造，**日语、韩语**同样是一等公民。**印地语、阿拉伯语**等非拉丁文字也已支持
-（注释长度上限放宽了，断句也做了适配，见 `docs/MULTILANG-FINDINGS.md`）。
-
-**拉丁文字**的母语（西班牙语、葡萄牙语、越南语……）暂时**不支持**：收割器靠「注释里含
-非 ASCII 字符」来区分真注释和 `SLA (service level agreement)` 这类英文括注，拉丁文字的
-注释过不了这一关。
+——注释长度上限放宽了，断句也做了适配，见 `docs/MULTILANG-FINDINGS.md`。
 
 ### 测试
 
@@ -153,6 +187,7 @@ npm test
 
 - 只收割严格符合 `术语（短注释）`、且注释含非 ASCII 字符的首次提及。换个说法点出术语就不入库（不过你还是读到了）。
 - 术语提取会抓括号前最多 4 个词，措辞不寻常时可能把多词术语截断。
+- 「已学过就裸用」靠 session-start 注入生词本里最近 120 个术语；更早的词若被重新标注，收割器会去重、不会重复入库，但你可能偶尔多看到一次注释。
 - 每段标几个词由 `/vocab rate` 调（默认 1，上限 5）；具体选哪个词仍全靠 prompt 控制，还需要在真实使用里继续调——见 `docs/DOGFOODING.md`。
 
 ### 这条 prompt 是怎么选出来的
@@ -240,7 +275,7 @@ core is one sentence:
 |---|---|
 | `rules/vibe-vocab.md` + `scripts/session-start.js` | `SessionStart` hook injects the rules when enabled. |
 | `hooks/hooks.json` + `scripts/log-vocab.js` | `Stop` hook harvests new terms into `vocab-log.md` after each turn. Never blocks a reply. |
-| `commands/vocab.md` | `/vocab on` / `off`, `/vocab` (word log), `/vocab focus <domain>` (Active mode), `/vocab rate <1-5>` (glosses per reply). |
+| `commands/vocab.md` | `/vocab on` / `off`, `/vocab` (word log), `/vocab focus <domain>` (Active mode), `/vocab rate <1-5>` (glosses per reply), `/vocab level` (specificity bar), `/vocab know` (mark known), `/vocab export` (CSV). |
 | `wordpacks/*.md` | Curated lists: `frontend`, `backend`, `ml`, `or-stats`, `devops`. |
 
 ### Enabling it
@@ -281,17 +316,59 @@ Capped at 5 — past that a reply is a glossary. The number lives in
 `/vocab on` again to apply it immediately. The harvester's safety cap rises with
 it, so the extra glosses still get logged.
 
+### How specialized a term has to be
+
+A beginner and a senior want different words glossed. `/vocab level` shifts that bar:
+
+```
+/vocab level beginner   # everyday terms count too: deploy, dependency, cache, race condition…
+/vocab level mid         # default: a term you likely half-know
+/vocab level advanced    # only genuinely specialized terms; most replies gloss nothing
+```
+
+`mid` is the shipped behaviour, so not setting it changes nothing. On `advanced`
+Claude holds back rather than reaching for a term to fill the slot. The value
+lives in `.vibe-vocab-level` (add `always` for the global one), applies from the
+next session, and `/vocab on` applies it now.
+
+### Words you already know
+
+**Anything in `vocab-log.md` is used bare from the next session on** — session
+start injects your recently learned terms and Claude treats them like a term
+already used earlier in the conversation, so it won't spend a reply's budget
+re-explaining one. You almost never need to mark anything by hand.
+
+The exception is terms you knew **before** installing VibeVocab and don't want
+glossed even once. Mark those in bulk:
+
+```
+/vocab know idempotent, mutex, back-pressure   # many at once
+/vocab know backend                            # a whole word pack
+/vocab forget mutex                            # undo
+/vocab forget all                              # clear the list
+```
+
+They're stored in `.vibe-vocab-known` (add `always` for the global list).
+`/vocab` with no args shows how many terms are marked.
+
+### Export for review
+
+```
+/vocab export
+```
+
+writes `vocab-log.md` out as `vocab-anki.csv`. In [Anki](https://apps.ankiweb.net)
+(a free spaced-repetition flashcard app), `File → Import` maps field 1 to the
+front (the English term) and field 2 to the back (the gloss); fields 3 and 4 are
+the context sentence and date. The same file opens directly in Excel / Google
+Sheets / Numbers.
+
 ### Language support
 
 Built and tuned for **Chinese**; **Japanese** and **Korean** are first-class too.
 Non-Latin scripts like **Hindi** and **Arabic** work as well — the gloss-length
 cap is widened and sentence boundaries are adapted (see
 `docs/MULTILANG-FINDINGS.md`).
-
-**Latin-script** native languages (Spanish, Portuguese, Vietnamese, …) are **not
-supported** for now: the harvester uses "the gloss contains a non-ASCII
-character" to tell a real gloss from an English aside like
-`SLA (service level agreement)`, and a Latin-script gloss can't clear that bar.
 
 ### Test
 
@@ -306,6 +383,7 @@ needed.
 
 - Only first mentions that match `term（short gloss）` with a non-ASCII character in the gloss get harvested. Terms introduced some other way stay out of the log — though you still read them.
 - Term extraction grabs up to 4 words before the parenthesis, so unusual phrasing can clip a multi-word term.
+- "Already learned → use bare" works off the most recent 120 terms in the log, injected at session start. An older term that gets re-glossed is de-duplicated by the harvester (no repeat row), but you might see the gloss once more.
 - How many terms per reply is set by `/vocab rate` (default 1, capped at 5); *which* term still rides on prompt control and needs tuning against real use — see `docs/DOGFOODING.md`.
 
 ### How the prompt was chosen

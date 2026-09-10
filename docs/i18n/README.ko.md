@@ -15,9 +15,7 @@
   <a href="../../README.md#中文">🇨🇳 中文</a> ·
   <a href="../../README.md#english">🇬🇧 English</a> ·
   <a href="README.ja.md">🇯🇵 日本語</a> ·
-  <strong>🇰🇷 한국어</strong> ·
-  <a href="README.pt-BR.md">🇧🇷 Português (Brasil)</a> ·
-  <a href="README.vi.md">🇻🇳 Tiếng Việt</a>
+  <strong>🇰🇷 한국어</strong>
 </p>
 
 ---
@@ -131,9 +129,6 @@ Claude Code v2에는 `/output-style`이 없어서, 플래그 파일 + hook 방�
 
 **중국어**를 기준으로 만들어지고 다듬어졌습니다. **일본어와 한국어**도 마찬가지로 1급 지원 언어입니다. **힌디어, 아랍어**같은 비라틴 문자 언어도 지원됩니다
 (주석 길이 상한을 넓히고 문장 경계 처리도 맞췄습니다. 자세한 내용은 `docs/MULTILANG-FINDINGS.md` 참고).
-
-**라틴 문자**를 쓰는 언어(스페인어, 포르투갈어, 베트남어 등)는 아직 **지원하지 않습니다**: 수집기는 "주석에 비 ASCII 문자가 포함되어 있는가"로
-진짜 주석과 `SLA (service level agreement)` 같은 영어 부연 설명을 구분하는데, 라틴 문자 주석은 이 기준을 통과할 수 없습니다.
 
 ### 테스트
 

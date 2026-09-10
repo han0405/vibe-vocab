@@ -15,9 +15,7 @@
   <a href="../../README.md#中文">🇨🇳 中文</a> ·
   <a href="../../README.md#english">🇬🇧 English</a> ·
   <strong>🇯🇵 日本語</strong> ·
-  <a href="README.ko.md">🇰🇷 한국어</a> ·
-  <a href="README.pt-BR.md">🇧🇷 Português (Brasil)</a> ·
-  <a href="README.vi.md">🇻🇳 Tiếng Việt</a>
+  <a href="README.ko.md">🇰🇷 한국어</a>
 </p>
 
 ---
@@ -131,9 +129,6 @@ Claude Code v2 には `/output-style` がないため、フラグファイル＋
 
 **中国語**向けに作られ、調整されています。**日本語・韓国語**も同様に一級市民として扱われます。**ヒンディー語・アラビア語**などの非ラテン文字言語にも対応しています
 （注釈の長さ上限を広げ、文の区切り方も調整しています。詳細は `docs/MULTILANG-FINDINGS.md` を参照）。
-
-**ラテン文字**を使う言語（スペイン語、ポルトガル語、ベトナム語など）は現時点では**未対応**です。収集ロジックは「注釈に非 ASCII 文字が含まれているか」で本物の注釈と
-`SLA (service level agreement)` のような英語の補足説明を見分けているため、ラテン文字の注釈ではこの判定を通過できません。
 
 ### テスト
 

@@ -165,6 +165,85 @@ ok(harvestGlossedTerms(fourGloss).length === 3, 'default harvest cap stays 3');
 ok(harvestGlossedTerms(fourGloss, 5).length === 4, 'harvest honours a higher cap');
 ok(harvestGlossedTerms(fourGloss, 2).length === 2, 'harvest honours a lower cap');
 
+// 9. already-learned terms: readLoggedTerms + session-start injection
+const { readLoggedTerms } = require(path.join(root, 'lib/vocab-store.js'));
+ok(readLoggedTerms(tmp).length === 3, 'readLoggedTerms reads every log row');
+ok(readLoggedTerms(tmp, 2).length === 2, 'readLoggedTerms respects the limit');
+ok(
+  readLoggedTerms(tmp, 2)[1].term === readLoggedTerms(tmp)[2].term,
+  'the limit keeps the most-recent rows'
+);
+
+runReport(['on']);
+const injectedLearned = runStart();
+ok(/## Already learned/.test(injectedLearned), 'session-start carries an "already learned" block');
+ok(
+  /idempotent/.test(injectedLearned) && /cache penetration/.test(injectedLearned),
+  'logged terms show up in the learned block'
+);
+ok(/3 terms already learned\./.test(injectedLearned), 'session-start header notes the learned count');
+
+// 10. /vocab know and /vocab forget
+const know1 = runReport(['know', 'mutex, back-pressure']);
+ok(/Added to the known list/.test(know1) && /mutex/.test(know1), '/vocab know adds terms');
+ok(fs.existsSync(path.join(tmp, '.vibe-vocab-known')), '/vocab know writes .vibe-vocab-known');
+const knownBody = fs.readFileSync(path.join(tmp, '.vibe-vocab-known'), 'utf8');
+ok(/mutex/.test(knownBody) && /back-pressure/.test(knownBody), 'both terms land in the file');
+
+ok(/Nothing new/.test(runReport(['know', 'mutex'])), '/vocab know dedupes case-insensitively');
+ok(/idempotent/.test(runReport(['know', 'backend'])), '/vocab know <pack> expands the word pack');
+
+const injectedKnown = runStart();
+ok(/## Already learned[\s\S]*mutex/.test(injectedKnown), 'user-marked terms reach the session-start block');
+
+const forget1 = runReport(['forget', 'mutex']);
+ok(/Removed from the known list/.test(forget1) && /mutex/.test(forget1), '/vocab forget removes a term');
+ok(!/\bmutex\b/.test(fs.readFileSync(path.join(tmp, '.vibe-vocab-known'), 'utf8')), 'mutex is gone from the file');
+ok(/Marked known\s+: \d+ term/.test(runReport([])), 'summary reports the known-term count');
+
+runReport(['forget', 'all']);
+ok(!fs.existsSync(path.join(tmp, '.vibe-vocab-known')), '/vocab forget all clears the list');
+
+// 11. /vocab export -> vocab-anki.csv
+const exp = runReport(['export']);
+ok(/Exported 3 term\(s\)/.test(exp), '/vocab export reports the row count');
+const csvPath = path.join(tmp, 'vocab-anki.csv');
+ok(fs.existsSync(csvPath), 'vocab-anki.csv is written');
+const csv = fs.readFileSync(csvPath, 'utf8');
+ok(/^Term,Gloss,Context,Date\r\n/.test(csv), 'csv starts with the header row');
+ok(csv.trim().split(/\r\n/).length === 4, 'csv is header + 3 data rows');
+ok(/idempotent/.test(csv) && /幂等/.test(csv), 'csv carries the term and its gloss');
+
+// 12. /vocab level: default, set, session-start override, aliases, reset
+const { readLevel } = require(path.join(root, 'lib/vocab-store.js'));
+ok(readLevel(tmp) === 'mid', 'readLevel defaults to mid');
+ok(!/## Vocabulary level:/.test(runStart()), 'no level override block at the default');
+
+const lvSet = runReport(['level', 'advanced']);
+ok(fs.readFileSync(path.join(tmp, '.vibe-vocab-level'), 'utf8').trim() === 'advanced', '/vocab level advanced writes the flag');
+ok(/level set to advanced/.test(lvSet), 'level report confirms advanced');
+ok(readLevel(tmp) === 'advanced', 'readLevel picks up advanced');
+
+const injectedAdv = runStart();
+ok(/## Vocabulary level: advanced/.test(injectedAdv), 'session-start injects the advanced override');
+ok(/Raise the bar/.test(injectedAdv), 'advanced override tells the model to raise the bar');
+ok(/Vocabulary level: advanced\./.test(injectedAdv), 'session-start header notes the level');
+
+runReport(['level', 'senior']); // alias -> advanced
+ok(readLevel(tmp) === 'advanced', '"senior" is accepted as an alias for advanced');
+runReport(['level', 'novice']); // alias -> beginner
+ok(readLevel(tmp) === 'beginner', '"novice" is accepted as an alias for beginner');
+ok(/## Vocabulary level: beginner/.test(runStart()), 'session-start injects the beginner override');
+
+ok(/Usage: \/vocab level/.test(runReport(['level', 'wat'])), 'an unknown level is rejected with usage');
+ok(readLevel(tmp) === 'beginner', 'a rejected level leaves the previous one intact');
+
+runReport(['level', 'off']);
+ok(!fs.existsSync(path.join(tmp, '.vibe-vocab-level')), '/vocab level off removes the flag');
+ok(readLevel(tmp) === 'mid' && !/Vocabulary level: (beginner|advanced)/.test(runStart()), 'back to mid once reset');
+ok(/Vocabulary level  : mid/.test(runReport([])), 'summary shows the vocabulary level');
+runReport(['off']);
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nAll green.');
 process.exit(failures ? 1 : 0);
