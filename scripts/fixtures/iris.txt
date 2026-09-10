@@ -1,0 +1,41 @@
+机器学习最经典的入门例子——用鸢尾花数据集做分类。这属于 supervised learning（监督学习）：每条数据都带着正确答案，模型从中学习输入到标签的映射。
+
+```python
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+# 1. 加载数据
+iris = load_iris()
+X = iris.data              # 特征：花萼、花瓣的长宽，共 4 列
+y = iris.target            # 标签：0/1/2 三种鸢尾花
+
+# 2. 划分训练集和测试集，留 20% 数据用于测试
+#    random_state 固定随机种子，保证结果可复现
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# 3. 特征标准化：缩放到均值 0、方差 1
+#    scaler 只在训练集上 fit，再用同样的参数处理测试集
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# 4. 创建并训练模型
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# 5. 在测试集上预测并评估
+y_pred = model.predict(X_test)
+print("准确率：", accuracy_score(y_test, y_pred))
+print(classification_report(y_test, y_pred, target_names=iris.target_names))
+```
+
+第 2 步的 train-test split（划分数据集）是最关键的一步：用模型没见过的数据来评估，才能反映真实表现。如果直接在全部数据上训练再看准确率，几乎必然高估。
+
+标准化那一步要注意：`scaler` 只能在训练集上 `fit`，否则测试集的信息会提前泄露进训练过程，评估结果就不可信了。
+
+想换个模型，把 `RandomForestClassifier` 换成 `LogisticRegression` 或 `SVC` 即可，其余代码几乎不用动——这是 scikit-learn 统一 API 的好处。

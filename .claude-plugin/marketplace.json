@@ -1,0 +1,13 @@
+{
+  "name": "vibe-vocab-local",
+  "owner": {
+    "name": "Han"
+  },
+  "plugins": [
+    {
+      "name": "vibe-vocab",
+      "source": "./",
+      "description": "Passively build technical English vocabulary while you vibe-code in your native language."
+    }
+  ]
+}

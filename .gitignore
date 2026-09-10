@@ -1,0 +1,14 @@
+# Local activation flags (per-project / per-user state, never shared)
+.vibe-vocab-on
+.vibe-vocab-always
+
+# Runtime output — the user's own word log / focus pack, written by the hooks
+vocab-log.md
+vocab-focus.md
+
+# Scratch fixtures created by the prompt-evaluation pass
+scripts/fixtures/eval-*.txt
+
+# Node
+node_modules/
+npm-debug.log*

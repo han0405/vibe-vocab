@@ -1,0 +1,13 @@
+{
+  "name": "vibe-vocab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Claude Code plugin: passively build technical English vocabulary while vibe-coding",
+  "main": "lib/vocab-store.js",
+  "scripts": {
+    "test": "node scripts/smoke-test.js && node scripts/dryrun.js iris && node scripts/dryrun.js iris-bad && node scripts/dryrun.js rl"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

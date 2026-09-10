@@ -1,0 +1,17 @@
+机器学习最经典的入门例子——用鸢尾花数据集做分类。下面这段代码用 scikit-learn 完成一个完整的 supervised learning（监督学习）流程：
+
+```python
+# 2. 划分训练集和测试集（train-test split（训练测试划分））
+#    test_size=0.2 表示留 20% 数据用于测试
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+```
+
+关键点说明：
+
+| 步骤 | 作用 | 常见坑 |
+|---|---|---|
+| train-test split | 用没见过的数据评估模型 | 不划分直接看训练集准确率 → 高估性能 |
+| 标准化 | 让不同量纲的特征公平参与计算 | 在整个数据集上 fit，导致 data leakage（数据泄漏） |
+| random_state | 固定随机性，结果可复现 | 不设置 → 每次运行结果不同 |

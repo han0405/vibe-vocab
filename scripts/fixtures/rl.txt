@@ -1,0 +1,54 @@
+Reinforcement Learning（强化学习）的核心思路：一个 agent 在 environment 里反复试错，每走一步拿到一个 reward，目标是学出一套 policy，让长期累计回报最大。下面用最简单的 tabular Q-learning，在一个 5 格走廊上演示完整训练过程。
+
+```python
+import numpy as np
+
+# 环境：0..4 共五个格子，4 号是终点；动作 0=左, 1=右
+N_STATES = 5
+ACTIONS = [0, 1]
+GOAL = 4
+
+def step(state, action):
+    """返回 (下一状态, 奖励, 是否结束)"""
+    nxt = min(state + 1, N_STATES - 1) if action == 1 else max(state - 1, 0)
+    reward = 1.0 if nxt == GOAL else 0.0
+    done = (nxt == GOAL)
+    return nxt, reward, done
+
+Q = np.zeros((N_STATES, len(ACTIONS)))   # Q 表：每个 (状态, 动作) 的价值估计
+
+alpha = 0.1      # 学习率
+gamma = 0.9      # 折扣因子，越接近 1 越看重长远回报
+epsilon = 0.1    # 探索概率
+episodes = 500
+
+for ep in range(episodes):
+    state, done = 0, False
+    while not done:
+        # epsilon-greedy：小概率随机探索，否则选当前估计最优的动作
+        if np.random.rand() < epsilon:
+            action = np.random.choice(ACTIONS)
+        else:
+            action = int(np.argmax(Q[state]))
+
+        nxt, reward, done = step(state, action)
+
+        # Q-learning 更新：把 Q(s,a) 朝 "即时奖励 + 未来最优估计" 拉近
+        td_target = reward + gamma * np.max(Q[nxt]) * (not done)
+        Q[state, action] += alpha * (td_target - Q[state, action])
+
+        state = nxt
+
+print(Q)
+print("每个状态学到的最优动作:", np.argmax(Q, axis=1))
+```
+
+几个关键点：
+
+1. **交互循环**：`step` 就是环境，agent 只能通过 `(下一状态, 奖励, 是否结束)` 观察世界，不知道环境内部规则，全靠采样。
+2. **Q 表的含义**：`Q[s, a]` 估计"在状态 s 执行动作 a，之后一直按最优策略走"能拿到的总回报。训练前全是 0，训练中被逐步修正。
+3. **更新公式**：`td_target - Q[state, action]` 是时序差分误差，用当前更可信的估计去纠正旧估计，这是从 Bellman 最优方程推出来的。
+4. **探索与利用**：`epsilon` 太小容易过早锁死次优路线，太大则学得慢。这条走廊很简单，0.1 足够。
+5. **结果**：跑完后每个状态的最优动作应该都是向右，因为向右才最快到达终点、拿到奖励。
+
+把 `step` 换成 Gym 环境、把 Q 表换成神经网络，就过渡到 DQN 了，但训练骨架和这段代码是一样的。

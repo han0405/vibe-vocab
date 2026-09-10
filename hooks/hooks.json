@@ -1,0 +1,29 @@
+{
+  "description": "VibeVocab: inject the vocabulary rules at session start when enabled, and after each assistant turn harvest the terms Claude glossed on first use into vocab-log.md.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.js\"",
+            "timeout": 10,
+            "statusMessage": "Checking VibeVocab flag..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/log-vocab.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

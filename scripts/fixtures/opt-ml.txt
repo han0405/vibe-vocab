@@ -1,0 +1,35 @@
+经典机器学习通常指监督学习里的分类和回归。下面用 scikit-learn 做一个完整的二分类流程，并对比逻辑回归和随机森林。这里的关键是 cross-validation（交叉验证）：在训练集内部反复切分来估计模型的泛化能力，避免只看一次划分的运气。
+
+```python
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+
+X, y = load_breast_cancer(return_X_y=True)
+# 分层划分，保证两类比例和原始数据一致
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, stratify=y, random_state=42
+)
+
+logreg = make_pipeline(StandardScaler(), LogisticRegression(max_iter=5000))
+rf = RandomForestClassifier(n_estimators=200, random_state=42)
+
+for name, model in [("逻辑回归", logreg), ("随机森林", rf)]:
+    scores = cross_val_score(model, X_train, y_train, cv=5, scoring="f1")
+    print(f"{name} 5 折 F1：{scores.mean():.4f} ± {scores.std():.4f}")
+
+# 选表现更好的那个在测试集上做最终评估
+logreg.fit(X_train, y_train)
+print(classification_report(y_test, logreg.predict(X_test)))
+```
+
+几个要点：
+
+- 逻辑回归前面接了一个 `StandardScaler`，把特征缩放到同一量纲；标准化的参数只能在训练集上拟合，否则测试集信息会提前泄露。
+- `RandomForestClassifier` 对特征尺度不敏感，所以没给它加标准化。
+- 用 F1 而不是准确率，是因为很多医疗数据类别不均衡，准确率会虚高。
+- 如果交叉验证分数远高于测试分数，通常是 overfitting，需要简化模型或加正则。

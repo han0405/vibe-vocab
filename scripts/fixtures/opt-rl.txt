@@ -1,0 +1,40 @@
+下面用最小的表格型 Q-learning 例子讲强化学习：一条 6 格走廊，位置 5 是终点，智能体从位置 0 出发，每步向左或向右，到终点得 +1，其余为 0。它要自己学出一个 policy（策略）——每个状态下该走哪个方向。
+
+```python
+import numpy as np
+
+N_STATES, ACTIONS = 6, [0, 1]  # 0=左, 1=右
+
+def step(state, action):
+    """在当前状态执行动作，返回 下一个状态、即时奖励、是否结束"""
+    nxt = max(0, state - 1) if action == 0 else min(N_STATES - 1, state + 1)
+    done = nxt == N_STATES - 1
+    return nxt, (1.0 if done else 0.0), done
+
+Q = np.zeros((N_STATES, len(ACTIONS)))
+alpha, gamma, epsilon = 0.1, 0.9, 0.1
+
+for episode in range(300):
+    state, done = 0, False
+    while not done:
+        # 以一定概率随机探索，否则选当前估计最好的动作
+        if np.random.rand() < epsilon:
+            action = np.random.choice(ACTIONS)
+        else:
+            action = int(np.argmax(Q[state]))
+        nxt, reward, done = step(state, action)
+        # 用「即时奖励 + 折扣后的下一状态最大价值」当目标，往这个方向修正一点
+        target = reward + gamma * np.max(Q[nxt]) * (not done)
+        Q[state, action] += alpha * (target - Q[state, action])
+        state = nxt
+
+print(np.argmax(Q, axis=1)[:-1])  # 每个位置的最优动作，应该全是 1（向右）
+```
+
+关键点：
+
+- **交互循环**：智能体在环境里反复「看状态 → 选动作 → 拿奖励和新状态」，没有标准答案，只有奖励这一个稀疏信号。
+- **Q 值**：`Q[state, action]` 估计的是「在这个状态做这个动作，之后一路走下去的总回报」。训练就是让这张表逼近真实值。
+- **gamma**：折扣因子，小于 1 时越远的奖励权重越低，鼓励尽快到终点。
+- **epsilon**：探索与利用的平衡。永远选当前最优会卡在次优路径里，偶尔随机才可能发现更好的走法。
+- **收敛**：跑足够多轮后，终点的 +1 会顺着更新公式一格一格传回起点，policy 就稳定了。
