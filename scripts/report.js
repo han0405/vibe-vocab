@@ -44,8 +44,13 @@ const packDir = path.join(__dirname, '..', 'wordpacks');
 const focusFile = path.join(projectDir, 'vocab-focus.md');
 const logFile = path.join(projectDir, LOG_NAME);
 const projectFlag = path.join(projectDir, '.vibe-vocab-on');
+// Where `/vocab ... always` writes the global opt-in files. Prefer an explicit
+// $VIBE_VOCAB_CONFIG_DIR (set by the Codex adapter) so its reads and these
+// writes agree; otherwise the historical $CLAUDE_CONFIG_DIR / ~/.claude.
 const claudeCfgDir =
-  process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+  process.env.VIBE_VOCAB_CONFIG_DIR ||
+  process.env.CLAUDE_CONFIG_DIR ||
+  path.join(os.homedir(), '.claude');
 const globalFlag = path.join(claudeCfgDir, '.vibe-vocab-always');
 
 if (sub === 'on' || sub === 'off') {

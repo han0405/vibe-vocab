@@ -10,6 +10,10 @@ vocab-log.md
 vocab-focus.md
 vocab-anki.csv
 
+# Codex adapter writes a managed block into the project's AGENTS.md; ignore it
+# in this repo so a local `npm run codex:install` dogfood run isn't committed.
+AGENTS.md
+
 # Scratch fixtures created by the prompt-evaluation pass
 scripts/fixtures/eval-*.txt
 

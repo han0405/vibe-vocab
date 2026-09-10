@@ -8,6 +8,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" alt="License"></a>
   <img src="https://img.shields.io/badge/Claude%20Code-plugin-6b4fbb?style=flat" alt="Claude Code plugin">
+  <img src="https://img.shields.io/badge/Codex%20CLI-compatible-000000?style=flat" alt="Codex CLI compatible">
   <img src="https://img.shields.io/badge/node-%E2%89%A518-brightgreen?style=flat" alt="Node >= 18">
 </p>
 
@@ -86,6 +87,24 @@
 - `/vocab off` 关闭。想临时安静一会儿，直接说「别标注」或「focus」。
 - 从**项目根目录**启动 `claude`——`vocab-log.md` 和配置文件都落在启动目录，不向子目录继承。
 - 改了插件文件后 `/plugin` → update。
+
+### 用在 Codex CLI 上
+
+Codex 没有插件市场，但同一套核心逻辑能跑。装一次：
+
+```
+git clone https://github.com/han0405/vibe-vocab
+cd vibe-vocab && npm run codex:install
+```
+
+这会做三件事：把 `/vocab` 命令装进 `~/.codex/prompts/`；在 `~/.codex/config.toml`
+里加一行 `notify`，让每轮结束后 `codex/notify.js` 收词并刷新 `AGENTS.md`；给当前项目
+写好 `AGENTS.md` 里的托管块。之后重启 Codex，在项目里 `/vocab on` 即可。
+
+- 规则通过项目 `AGENTS.md` 里 `<!-- VIBEVOCAB:START -->` … `END` 之间的托管块注入，
+  块外内容不动；`/vocab off` 会移除该块。
+- `notify` 是 Codex 的全局单槽。已经用了 `notify`？装脚本会提示你怎么串联，不会覆盖。
+- `rate` / `level` / 已学词表在**下次会话**生效（和 Claude 版的 SessionStart 时机一致）。
 
 ### 调节
 
@@ -170,6 +189,28 @@ Full rules in `rules/vibe-vocab.md` (injected into the session when enabled): ea
 - `/vocab off` disables it. To go quiet for a bit, just say "focus" or "别标注".
 - Start `claude` at the **project root** — `vocab-log.md` and the config files land in the directory you start from and don't inherit into subdirectories.
 - After editing plugin files, `/plugin` → update.
+
+### With Codex CLI
+
+Codex has no plugin marketplace, but the same core runs there. Install once:
+
+```
+git clone https://github.com/han0405/vibe-vocab
+cd vibe-vocab && npm run codex:install
+```
+
+That installs the `/vocab` prompt into `~/.codex/prompts/`, adds a `notify` line to
+`~/.codex/config.toml` so `codex/notify.js` harvests terms and refreshes `AGENTS.md`
+after every turn, and seeds the managed block in the current project's `AGENTS.md`.
+Restart Codex, then `/vocab on` in a project.
+
+- The rules are injected via a managed block in the project's `AGENTS.md`, between
+  `<!-- VIBEVOCAB:START -->` and `END`; nothing outside it is touched, and
+  `/vocab off` removes it.
+- `notify` is Codex's single global slot. Already using it? The installer prints
+  how to chain both — it won't overwrite.
+- `rate` / `level` / the learned-term list take effect **next session** (same
+  timing as the Claude Code SessionStart hook).
 
 ### Tuning
 
