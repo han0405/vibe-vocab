@@ -13,7 +13,11 @@
 
 <p align="center">
   <a href="#中文"><strong>🇨🇳 中文</strong></a> ·
-  <a href="#english">🇬🇧 English</a>
+  <a href="#english"><strong>🇬🇧 English</strong></a> ·
+  <a href="docs/i18n/README.ja.md">🇯🇵 日本語</a> ·
+  <a href="docs/i18n/README.ko.md">🇰🇷 한국어</a> ·
+  <a href="docs/i18n/README.pt-BR.md">🇧🇷 Português (Brasil)</a> ·
+  <a href="docs/i18n/README.vi.md">🇻🇳 Tiếng Việt</a>
 </p>
 
 ---
@@ -22,9 +26,9 @@
 
 ### 一句话
 
-在Vibe Coding过程中，你照常用中文提需求，Claude 照常干活，但每条回复里**最关键的那一个概念**，
-Claude 会用英文术语讲，并在它第一次出现时补一句极简中文注释。之后这个词就裸用，不再解释。
-你可以在使用自然语言交互的过程中，在真实语境里把它记住了专业英语术语，学习英语词汇！
+**Vibe coding 的时候**，你照常用中文提需求，Claude 照常干活。唯一的区别是每条回复里**最关键的概念**，Claude 用英文术语讲，并在它第一次出现时补一句极简中文注释。之后这个词就直接裸用，不再解释，你来靠上下文认出它。
+
+在真实语境里学会英语术语！
 
 ### 有什么变化
 
@@ -86,7 +90,7 @@ Claude 会用英文术语讲，并在它第一次出现时补一句极简中文�
 |---|---|
 | `rules/vibe-vocab.md` + `scripts/session-start.js` | `SessionStart` hook，启用时把规则注入会话。 |
 | `hooks/hooks.json` + `scripts/log-vocab.js` | `Stop` hook，每轮回复后收割新术语进 `vocab-log.md`，从不阻塞回复。 |
-| `commands/vocab.md` | `/vocab on`、`/vocab off`、`/vocab`（看生词本）、`/vocab focus <领域>`（主动模式）。 |
+| `commands/vocab.md` | `/vocab on`、`/vocab off`、`/vocab`（看生词本）、`/vocab focus <领域>`（主动模式）、`/vocab rate <1-5>`（每段标几个词）。 |
 | `wordpacks/*.md` | 精选词表：`frontend`、`backend`、`ml`、`or-stats`、`devops`。 |
 
 ### 启用
@@ -111,6 +115,19 @@ Claude Code v2 没有 `/output-style`，所以用「flag 文件 + hook」来激�
 - **主动** —— `/vocab focus backend` 把该词包写进 `vocab-focus.md`，Claude 会主动找机会用上这些词。`/vocab focus off` 回到被动。
 - **静音** —— 「别标注」/「focus」暂停当前会话；`/vocab off` 对以后也一并关掉。
 
+### 一段回复标几个词
+
+默认一段回复只标 **1** 个最核心的概念。想放宽：
+
+```
+/vocab rate 3         # 当前项目，每段最多 3 个
+/vocab rate 3 always  # 所有项目
+/vocab rate off       # 回到默认的 1
+```
+
+上限 5——再多就成单词表了。写进项目根目录的 `.vibe-vocab-rate`，下次会话生效；
+想当场生效再跑一次 `/vocab on`。后台收割器的安全上限也会跟着抬高，多标的词不会漏收。
+
 ### 语言支持
 
 为**中文**打造，**日语、韩语**同样是一等公民。**印地语、阿拉伯语**等非拉丁文字也已支持
@@ -132,7 +149,7 @@ npm test
 
 - 只收割严格符合 `术语（短注释）`、且注释含非 ASCII 字符的首次提及。换个说法点出术语就不入库（不过你还是读到了）。
 - 术语提取会抓括号前最多 4 个词，措辞不寻常时可能把多词术语截断。
-- 频率和选词全靠 prompt 控制，还需要在真实使用里继续调——见 `docs/DOGFOODING.md`。
+- 每段标几个词由 `/vocab rate` 调（默认 1，上限 5）；具体选哪个词仍全靠 prompt 控制，还需要在真实使用里继续调——见 `docs/DOGFOODING.md`。
 
 ### 这条 prompt 是怎么选出来的
 
@@ -145,10 +162,9 @@ npm test
 
 ### In one line
 
-You ask in your own language, Claude works as usual. The one difference: for the
-**single most central concept** in each reply, Claude uses the English term and
-glosses it once, the first time it shows up. After that the term goes bare. You
-spent zero extra time and picked it up in real context.
+While **vibe coding**, you ask in your own language as usual, and Claude works as usual. The only difference: for the single **most central concept** in each reply, Claude uses the English term and glosses it once, the first time it appears. After that the term goes bare, no more explaining — you pick it up from context.
+
+Pick up real English terms, in real context!
 
 ### What changes
 
@@ -217,7 +233,7 @@ core is one sentence:
 |---|---|
 | `rules/vibe-vocab.md` + `scripts/session-start.js` | `SessionStart` hook injects the rules when enabled. |
 | `hooks/hooks.json` + `scripts/log-vocab.js` | `Stop` hook harvests new terms into `vocab-log.md` after each turn. Never blocks a reply. |
-| `commands/vocab.md` | `/vocab on` / `off`, `/vocab` (word log), `/vocab focus <domain>` (Active mode). |
+| `commands/vocab.md` | `/vocab on` / `off`, `/vocab` (word log), `/vocab focus <domain>` (Active mode), `/vocab rate <1-5>` (glosses per reply). |
 | `wordpacks/*.md` | Curated lists: `frontend`, `backend`, `ml`, `or-stats`, `devops`. |
 
 ### Enabling it
@@ -242,6 +258,21 @@ Pick up file edits with `/plugin` → update. End-to-end verification lives in
 - **Passive (default).** No word list; Claude picks from the conversation. One gloss per reply.
 - **Active.** `/vocab focus backend` writes that pack to `vocab-focus.md` and Claude looks for natural openings to use those terms. `/vocab focus off` to go back.
 - **Muted.** "别标注" / "focus" pauses the current session; `/vocab off` turns it off for future ones too.
+
+### Terms per reply
+
+By default each reply glosses the **single** most central concept. To allow more:
+
+```
+/vocab rate 3         # this project, up to 3 per reply
+/vocab rate 3 always  # every project
+/vocab rate off       # back to the default of 1
+```
+
+Capped at 5 — past that a reply is a glossary. The number lives in
+`.vibe-vocab-rate` at the project root and applies from the next session; run
+`/vocab on` again to apply it immediately. The harvester's safety cap rises with
+it, so the extra glosses still get logged.
 
 ### Language support
 
@@ -268,7 +299,7 @@ needed.
 
 - Only first mentions that match `term（short gloss）` with a non-ASCII character in the gloss get harvested. Terms introduced some other way stay out of the log — though you still read them.
 - Term extraction grabs up to 4 words before the parenthesis, so unusual phrasing can clip a multi-word term.
-- Frequency and term choice are pure prompt control and still need tuning against real use — see `docs/DOGFOODING.md`.
+- How many terms per reply is set by `/vocab rate` (default 1, capped at 5); *which* term still rides on prompt control and needs tuning against real use — see `docs/DOGFOODING.md`.
 
 ### How the prompt was chosen
 
