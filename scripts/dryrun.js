@@ -21,6 +21,8 @@ if (!fs.existsSync(fixture)) {
 const reply = fs.readFileSync(fixture, 'utf8');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vv-dryrun-'));
+// the Stop hook only harvests when VibeVocab is enabled for the dir
+fs.writeFileSync(path.join(tmp, '.vibe-vocab-on'), 'enabled\n', 'utf8');
 const transcript = path.join(tmp, 't.jsonl');
 fs.writeFileSync(
   transcript,

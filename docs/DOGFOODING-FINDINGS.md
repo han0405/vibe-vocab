@@ -5,6 +5,91 @@ consciously accepted. Newest session first. See `DOGFOODING.md` for the method.
 
 ---
 
+## Session 2026-09-10 (b) — second run on v0.3.0, but VibeVocab was OFF
+
+**Context.** Plugin updated to `0.3.0`. Same two prompts as session (a): a SFT
+walkthrough then an RL follow-up, in Chinese, started from `D:\project`. After
+the run, `/vocab` reported **`Enabled: OFF`**, `mid`, rate 1, Passive — no
+`.vibe-vocab-on` in the dir and no global `.vibe-vocab-always`. So
+`session-start.js` injected **nothing**: the two replies were plain Claude Code
+with no VibeVocab rules. The v0.3.0 prompt patch could not be evaluated from
+this run.
+
+`vocab-log.md` in `D:\project` nonetheless gained 2 rows
+(`Reward Model | 经典 RLHF`, `Reward hacking | 奖励攻击`) — which is Finding 5.
+
+### Finding 5 — the Stop hook harvests even when VibeVocab is disabled — FIXED 2026-09-10
+
+`scripts/log-vocab.js` never checked the enable flag — only `session-start.js`
+did. So in any project, enabled or not, each assistant turn was scanned and any
+naturally-occurring `英文（中文）` first-mention (very common in Chinese ML
+prose) was written to `vocab-log.md`. A user who never ran `/vocab on` still got
+a growing log, populated by un-ruled, un-budgeted asides — including
+false-positive-prone shapes the injected rules would have suppressed.
+
+→ **Fixed.** `lib/vocab-store.js` gains `isEnabled(cwd)` (global
+`.vibe-vocab-always` OR project `.vibe-vocab-on`, the same test
+`session-start.js` uses). `log-vocab.js` calls it first and `process.exit(0)`s
+when off. `smoke-test.js` section 16 covers both directions;
+`smoke-test.js`/`dryrun.js` now set `.vibe-vocab-on` in their temp dirs since
+the harvest path is gated. `contextIsThin` / harvest behaviour unchanged.
+
+### Finding 6 — `Reward Model（经典 RLHF）` false positive — NOTED, minor
+
+One of the two rows logged this run: `经典 RLHF` ("classic RLHF") is the
+**column label** of the PPO / DPO / GRPO comparison table
+(`│ PPO + Reward Model(经典 RLHF) │ DPO(直接偏好优化) │ …`), not a gloss of
+"Reward Model". `DPO` / `GRPO` in the same header row were correctly skipped by
+the Finding 1 bare-acronym rule (`^[A-Z][A-Z0-9]{1,5}$`), but `Reward Model` is
+two words with lowercase, so it slipped. Box-drawing verticals bound the
+*context* (Finding 1) but don't make the line ineligible — and `smoke-test.js`
+13b deliberately asserts a gloss inside a box-drawing row still harvests, so
+blanket-rejecting those lines would reverse a prior decision.
+
+Low priority now that Finding 5 stops the log filling while disabled, and an
+injected `mid` ruleset pushes the model away from `term(label)` comparison
+tables toward prose. Revisit only if it recurs with VibeVocab actually ON.
+Candidate: reject a gloss whose text is `<≤2 CJK chars> <all-caps run ≥3>`
+(label shape) when the term is multi-word capitalized.
+
+---
+
+## Session 2026-09-10 (c) — v0.3.0, VibeVocab ON, `mid` — Finding 2 patch looks good
+
+**Context.** `D:\Project\vibe-vocab`, `/vocab on` → `Enabled: ON (this
+project)`, `mid`, rate 1. One prompt — "写一段 sft 微调的示例代码和讲解" — but
+the reply ran long: SFT walkthrough → RL section covering classic RLHF / DPO /
+PPO / GRPO → DPO variants (ORPO, IPO). ~6 concepts, several bold run-in header
+list items (`**学习率和 epoch 要保守。**`, `**显存不够就上 LoRA。**`, …).
+
+**Result: exactly one gloss — `reward model（奖励模型）`, in a prose sentence,
+first use, then bare on all four later mentions.** No `- **term（释义）** —`
+glossary. The bold run-in header list carried zero glosses (`epoch`, `batch`,
+`LoRA`, `gradient_accumulation_steps` all bare). No box-drawing comparison
+table this run — the PPO/DPO/GRPO contrast was a plain bullet list. No reversed
+`中文（English）` aside spotted.
+
+So the v0.3.0 "glossary-bullet trap" paragraph (plus Finding 3 making the
+ruleset actually reach the session) did what session (a) needed: a long
+multi-concept, list-heavy reply resolved to one prose gloss. `SFT` itself
+wasn't glossed — correct: it's a bare acronym and the user wrote "sft 微调" in
+the prompt, so 微调 is theirs. Spending the slot on `reward model` (the most
+central *new* concept, from the RL half) is a defensible pick.
+
+**Finding 2 → considered addressed.** Keep watching over more real runs; if an
+over-glossed key-points list reappears, reopen with the sample.
+
+**Minor, this run:** `/vocab` still listed two junk rows —
+`Finding 5 | 已修`, `Refresh | 或卸载重装` — harvested from an *earlier turn in
+that same session*, where the assistant was discussing these findings and wrote
+e.g. "Finding 5（已修）". Dogfooding VibeVocab inside the vibe-vocab repo logs
+the project's own meta-jargon. Not worth a code change; either `/vocab off`
+while working on this repo, or `/vocab forget all` + delete the stray rows.
+(Finding 5's fix is in the working tree, not yet in the installed plugin, so
+that gate wasn't active for this session anyway.)
+
+---
+
 ## Session 2026-09-10 — first real run on v0.2.0
 
 **Context.** Plugin reinstalled at `0.2.0` (commit `bc295ab`). Two long
@@ -57,7 +142,7 @@ with fine glosses — losing them here is the right call because they were part 
 a 4-plus-gloss glossary dump in one reply (see Finding 2); a normal first-use
 mention in prose still logs them.
 
-### Finding 2 — prompt compliance: glossary-style layout defeats the one-gloss rule — PROMPT PATCHED 2026-09-10, needs live re-check
+### Finding 2 — prompt compliance: glossary-style layout defeats the one-gloss rule — ADDRESSED 2026-09-10 (patched + re-checked ON at `mid`, see session (c))
 
 The "关键点讲解" section of the SFT reply was a bulleted glossary:
 

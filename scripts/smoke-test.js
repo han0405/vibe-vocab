@@ -49,6 +49,10 @@ const runHook = () =>
     encoding: 'utf8',
   });
 
+// The Stop hook only harvests when VibeVocab is enabled for the dir (section 16
+// covers the disabled case). Enable it for the harvest tests below.
+fs.writeFileSync(path.join(tmp, '.vibe-vocab-on'), 'enabled\n', 'utf8');
+
 // 2. first run creates the log with both terms
 runHook();
 const logPath = path.join(tmp, 'vocab-log.md');
@@ -91,6 +95,8 @@ const runStart = (extraEnv) =>
     env: Object.assign({}, process.env, { CLAUDE_CONFIG_DIR: tmp }, extraEnv || {}),
   });
 
+// drop the flag the harvest tests above set, so "not enabled" is true again
+try { fs.unlinkSync(path.join(tmp, '.vibe-vocab-on')); } catch (e) {}
 ok(runStart().trim() === '', 'session-start silent when not enabled');
 
 // /vocab on writes the project flag
@@ -306,6 +312,34 @@ ok(/budget override/i.test(reinjected) && /\b4\b/.test(reinjected), 're-inject c
 ok(/glossary-bullet trap|glossary/i.test(reinjected), 're-inject carries the glossary-bullet guard');
 runReport(['rate', 'off']);
 runReport(['off']);
+
+// 16. Stop hook is a no-op when VibeVocab is disabled (docs/DOGFOODING-FINDINGS.md
+//     finding 5): the model's natural bilingual asides must not fill vocab-log.md
+//     in a project that never ran /vocab on.
+const offDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vibe-vocab-off-'));
+const offTranscript = path.join(offDir, 't.jsonl');
+fs.writeFileSync(
+  offTranscript,
+  JSON.stringify({
+    type: 'assistant',
+    message: { role: 'assistant', content: [{ type: 'text', text: '这里用 reward model（奖励模型）打分。' }] },
+  }) + '\n',
+  'utf8'
+);
+execFileSync('node', [path.join(root, 'scripts/log-vocab.js')], {
+  input: JSON.stringify({ cwd: offDir, transcript_path: offTranscript }),
+  encoding: 'utf8',
+  env: Object.assign({}, process.env, { CLAUDE_CONFIG_DIR: offDir }),
+});
+ok(!fs.existsSync(path.join(offDir, 'vocab-log.md')), 'Stop hook writes nothing when VibeVocab is disabled');
+fs.writeFileSync(path.join(offDir, '.vibe-vocab-on'), 'enabled\n', 'utf8');
+execFileSync('node', [path.join(root, 'scripts/log-vocab.js')], {
+  input: JSON.stringify({ cwd: offDir, transcript_path: offTranscript }),
+  encoding: 'utf8',
+  env: Object.assign({}, process.env, { CLAUDE_CONFIG_DIR: offDir }),
+});
+ok(fs.existsSync(path.join(offDir, 'vocab-log.md')), 'Stop hook harvests again once /vocab on is set');
+fs.rmSync(offDir, { recursive: true, force: true });
 
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nAll green.');

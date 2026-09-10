@@ -11,6 +11,7 @@
 const {
   readStdinJSON,
   readRate,
+  isEnabled,
   readLastAssistantText,
   harvestGlossedTerms,
   appendTerms,
@@ -19,6 +20,9 @@ const {
 try {
   const input = readStdinJSON();
   const cwd = input.cwd || process.cwd();
+  // VibeVocab off for this project -> don't create or touch vocab-log.md. The
+  // model's natural bilingual asides are not ours to harvest when disabled.
+  if (!isEnabled(cwd)) process.exit(0);
   const transcriptPath = input.transcript_path || input.transcriptPath;
   const text = readLastAssistantText(transcriptPath);
   // Safety cap: the configured per-reply budget plus one slack slot, but never
