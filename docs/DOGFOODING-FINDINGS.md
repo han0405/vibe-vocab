@@ -57,7 +57,7 @@ with fine glosses — losing them here is the right call because they were part 
 a 4-plus-gloss glossary dump in one reply (see Finding 2); a normal first-use
 mention in prose still logs them.
 
-### Finding 2 — prompt compliance: glossary-style layout defeats the one-gloss rule — OPEN
+### Finding 2 — prompt compliance: glossary-style layout defeats the one-gloss rule — PROMPT PATCHED 2026-09-10, needs live re-check
 
 The "关键点讲解" section of the SFT reply was a bulleted glossary:
 
@@ -85,7 +85,34 @@ fixes: strengthen the "walkthrough of eight concepts still gets exactly one"
 line; make the `advanced` override explicitly name the glossary-bullet
 anti-pattern.
 
-### Finding 3 — settings changed mid-session don't re-inject — OPEN
+**Patched 2026-09-10 (ahead of the 5–10-sample bar — see caveat).** Both
+candidate fixes applied, because Finding 3 was the bigger reason `advanced` /
+`rate 3` didn't hold and it is now fixed, so the prompt change can actually be
+evaluated on the next run:
+
+- `rules/vibe-vocab.md` — step 2 now points at a new **"The glossary-bullet
+  trap"** paragraph under the checklist. It names the trigger (a "关键点 / 要点
+  / key points" list, a numbered walkthrough, a `- **term** — 解释` breakdown),
+  says the whole list gets **zero** glosses of its own, and says a draft whose
+  only glosses are in a `**bold（释义）** —` list has already failed — cut them
+  all and re-introduce the one central term in a sentence if it belongs.
+- `rules/vibe-vocab.md` — the "ordinary words stay translated" bullet now lists
+  `会话`/`session` and `目录`/`directory` alongside `文件`/`file`, and adds that
+  the English has to be the term they'd reach for in a doc/interview, not the
+  dictionary equivalent (covers the `session（会话）` slip).
+- `scripts/session-start.js` — the `advanced` override block now tells the model
+  a key-points list "almost always warrants **no** gloss at all" at that level;
+  the `rate > 1` override block now says the higher budget does **not** license
+  a term-by-term glossary.
+
+**Caveat:** this is a prompt change with no offline test (the harvester already
+drops these rows per Finding 1). It needs a real dogfood run — ideally the same
+SFT / RL explainer prompts — to confirm the model stops *reaching for* the
+glossary layout, not just that the rows don't get logged. Still worth collecting
+more over-glossing samples; revert or iterate the wording if the next run shows
+no change.
+
+### Finding 3 — settings changed mid-session don't re-inject — FIXED 2026-09-10
 
 `/vocab level` / `/vocab rate` / `/vocab know` write their flag files, but the
 `SessionStart` hook only runs at session start, so the override blocks they
@@ -106,16 +133,47 @@ known. So even the documented "apply now" path is incomplete.
   `session-start.js` logic on demand), or add a `UserPromptSubmit` hook that
   keeps the blocks fresh.
 
-### Finding 4 — smaller stuff — OPEN
+**Fixed 2026-09-10 — took the "re-emit the override blocks" option, no new
+hook.**
+
+- `scripts/session-start.js` — `cwd` now also falls back to `process.argv[2]`,
+  so the script can be run directly with the project dir as an argument (it was
+  stdin/env only). Behaviour under the real `SessionStart` payload is unchanged.
+- `commands/vocab.md` — the per-subcommand Step 2 blocks are replaced by one:
+  after `report.js`, for `on` / `rate` / `level` / `know` / `forget` / `focus`
+  the command runs
+  `node "${CLAUDE_PLUGIN_ROOT}/scripts/session-start.js" "${CLAUDE_PROJECT_DIR}"`
+  and treats its stdout as the authoritative ruleset for the rest of the
+  session. That stdout is the *same* text — full rules + the current rate /
+  level / learned-terms override blocks — a fresh session would inject, so a
+  mid-session `/vocab rate 3` now really does put the rate-3 block in context
+  instead of relying on the model reading `report.js` prose and using judgment.
+- `smoke-test.js` section 15 covers the arg path and that the re-inject carries
+  the current override block.
+
+A brand-new session still does all this via the hook; the re-inject just removes
+the restart requirement. `commands/vocab.md` and both READMEs say so.
+
+### Finding 4 — smaller stuff — FIXED 2026-09-10
 
 - **Degenerate contexts.** `| idempotent | 幂等 | 关于 idempotent |`,
   `| backoff | 退避 | 关于 backoff |` — the context is just "关于 <term>".
   `dryrun.js` flags a context under 4 chars; "关于 idempotent" clears that but
   is still useless. Consider rejecting a context that is only the term plus one
   stop-word, or widening the window past a leading `关于` / `about`.
+  → **Fixed** in `lib/vocab-store.js`: new `contextIsThin(ctx, term)` — strips a
+  leading filler phrase (`关于` / `讲讲` / `什么是` / `about` / …) and the
+  headword, and if <2 letters/digits remain the context is thin. When the
+  harvested window is thin, `harvestGlossedTerms` steps past the delimiter run
+  the model put after the gloss (`：` `。` `. ` a pipe) and takes the next
+  clause instead. The term is still logged either way. `smoke-test.js` section
+  14 covers it.
 - **Flag & log location.** Running `claude` from a directory that isn't a
   project root (here `D:\Project`) drops `vocab-log.md` and the `.vibe-vocab-*`
   flags there, and they don't inherit into subdirectories. Not a bug, but worth
   a note in the README's "Enabling it" section, and the stray
   `D:\Project\vocab-log.md` / `.vibe-vocab-*` from this session can be moved or
   deleted.
+  → **Fixed:** note added to both READMEs' "Enabling it" / "启用" sections
+  ("start `claude` at the project root, not a directory above it"). The stray
+  `D:\Project\vocab-log.md` / `.vibe-vocab-*` are already gone.

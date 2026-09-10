@@ -16,3 +16,6 @@ scripts/fixtures/eval-*.txt
 # Node
 node_modules/
 npm-debug.log*
+
+# Scratch: repomix bundle output
+repomix-output.xml

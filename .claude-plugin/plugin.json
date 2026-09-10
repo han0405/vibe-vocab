@@ -1,7 +1,7 @@
 {
   "name": "vibe-vocab",
   "displayName": "VibeVocab",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Learn technical English vocabulary passively while you vibe-code in your native language. Claude keeps the English term for the key concept of each change and glosses it once, the first time it appears -- no separate app, no interruption to flow.",
   "author": {
     "name": "Han"

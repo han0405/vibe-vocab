@@ -1,6 +1,6 @@
 {
   "name": "vibe-vocab",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "private": true,
   "description": "Claude Code plugin: passively build technical English vocabulary while vibe-coding",
   "main": "lib/vocab-store.js",

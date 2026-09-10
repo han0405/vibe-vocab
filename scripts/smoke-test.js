@@ -279,6 +279,34 @@ ok(
   'bold run-in header glosses dropped, the prose gloss kept'
 );
 
+// 14. degenerate-context fallback (docs/DOGFOODING-FINDINGS.md finding 4)
+const { contextIsThin } = require(path.join(root, 'lib/vocab-store.js'));
+ok(contextIsThin('关于 idempotent', 'idempotent'), 'contextIsThin: "关于 <term>" is thin');
+ok(contextIsThin('about backoff', 'backoff'), 'contextIsThin: "about <term>" is thin');
+ok(!contextIsThin('这个写入要做成 idempotent 的，重复提交不会重复扣款', 'idempotent'), 'contextIsThin: a real sentence is not thin');
+// the model wrote a lead-in + gloss + "：" + the actual explanation; the window
+// around the gloss is just "关于 idempotent", so reach past the "：".
+const thin = harvestGlossedTerms('关于 idempotent（幂等）：指同一请求重复执行结果不变，不会重复扣款。');
+ok(thin.length === 1 && thin[0].term === 'idempotent', 'thin-context reply still harvests the term');
+ok(!/^关于 idempotent$/.test(thin[0].context) && /重复扣款|重复执行/.test(thin[0].context), 'context reaches past the colon to the real clause');
+// no forward clause to salvage -> keep whatever the window had, still log the term
+const thinNoTail = harvestGlossedTerms('关于 idempotent（幂等）。');
+ok(thinNoTail.length === 1 && thinNoTail[0].term === 'idempotent', 'thin context with no tail still logs the term');
+
+// 15. /vocab re-inject path: session-start.js takes the project dir as argv[2]
+//     (commands/vocab.md runs it on demand so mid-session setting changes apply)
+runReport(['on']);
+runReport(['rate', '4']);
+const reinjected = execFileSync('node', [path.join(root, 'scripts/session-start.js'), tmp], {
+  encoding: 'utf8',
+  env: Object.assign({}, process.env, { CLAUDE_CONFIG_DIR: tmp }),
+});
+ok(/VIBEVOCAB ACTIVE/.test(reinjected), 'session-start emits when handed the project dir as an arg (no stdin)');
+ok(/budget override/i.test(reinjected) && /\b4\b/.test(reinjected), 're-inject carries the current rate-4 override block');
+ok(/glossary-bullet trap|glossary/i.test(reinjected), 're-inject carries the glossary-bullet guard');
+runReport(['rate', 'off']);
+runReport(['off']);
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nAll green.');
 process.exit(failures ? 1 : 0);

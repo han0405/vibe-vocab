@@ -109,6 +109,11 @@ Claude Code v2 没有 `/output-style`，所以用「flag 文件 + hook」来激�
 - `/vocab on always` —— 全局启用。
 - `/vocab off` —— 关掉。想临时安静一会儿，说句「别标注」或「focus」就行。
 
+`vocab-log.md` 和 `.vibe-vocab-*` flag 都落在**你启动 `claude` 的那个目录**，
+且不会向子目录继承。要在项目里用，就从**项目根目录**启动 `claude`（不是它的
+上级目录）。中途改了 `rate` / `level` / `know` 想立刻生效，再跑一次 `/vocab`
+对应子命令即可（会重新注入规则），或者直接开新会话。
+
 改了插件文件之后 `/plugin` → update 生效。端到端的验证步骤见 `docs/DOGFOODING.md`。
 
 ### 三种模式
@@ -128,7 +133,8 @@ Claude Code v2 没有 `/output-style`，所以用「flag 文件 + hook」来激�
 ```
 
 上限 5——再多就成单词表了。写进项目根目录的 `.vibe-vocab-rate`，下次会话生效；
-想当场生效再跑一次 `/vocab on`。后台收割器的安全上限也会跟着抬高，多标的词不会漏收。
+想当场生效，把 `/vocab rate` 再跑一次即可（命令会重新注入规则）。后台收割器的
+安全上限也会跟着抬高，多标的词不会漏收。
 
 ### 什么词值得标：难度门槛
 
@@ -141,7 +147,8 @@ Claude Code v2 没有 `/output-style`，所以用「flag 文件 + hook」来激�
 ```
 
 `mid` 就是现在的行为，装了不设也一样。`advanced` 下 Claude 会克制到「没有合适的就不标」，
-不硬凑。写进 `.vibe-vocab-level`（加 `always` 存全局），下次会话生效；当场生效再跑 `/vocab on`。
+不硬凑。写进 `.vibe-vocab-level`（加 `always` 存全局），下次会话生效；当场生效把
+`/vocab level` 再跑一次。
 
 ### 已经会的词，不再标注
 
@@ -183,13 +190,13 @@ npm test
 
 离线跑一遍收割、去重、报告和多语言的全套检查，不需要 Claude Code。
 
-### 已知限制（v0.2）
+### 已知限制（v0.3）
 
 - 只收割严格符合 `术语（短注释）`、且注释含非 ASCII 字符的首次提及。换个说法点出术语就不入库（不过你还是读到了）。
 - 术语提取会抓括号前最多 4 个词，措辞不寻常时可能把多词术语截断。
 - 纯大写缩写（`DPO`、`API`、`SLA`……）后面的括注当作「展开/分类」而非生词，不入库；加粗行内标题、box-drawing 表格里的括注同样跳过。
 - 「已学过就裸用」靠 session-start 注入生词本里最近 120 个术语；更早的词若被重新标注，收割器会去重、不会重复入库，但你可能偶尔多看到一次注释。
-- 每段标几个词由 `/vocab rate` 调（默认 1，上限 5）；具体选哪个词仍全靠 prompt 控制，还需要在真实使用里继续调——见 `docs/DOGFOODING.md`。
+- 每段标几个词由 `/vocab rate` 调（默认 1，上限 5）；具体选哪个词仍全靠 prompt 控制，还需要在真实使用里继续调——见 `docs/DOGFOODING.md`。「关键点」清单里每条都加粗括注的老毛病，规则里已明确点名压制，但仍需真实使用检验。
 
 ### 这条 prompt 是怎么选出来的
 
@@ -293,6 +300,12 @@ Claude Code v2 has no `/output-style`, so activation is a flag file plus a hook.
 - `/vocab on always` — enable globally.
 - `/vocab off` — disable. Say "focus" or "别标注" to pause for a while.
 
+`vocab-log.md` and the `.vibe-vocab-*` flags are written in **the directory you
+start `claude` from**, and do not inherit into subdirectories — so start
+`claude` at the **project root**, not a directory above it. If you change
+`rate` / `level` / `know` mid-session, re-run that `/vocab` subcommand to apply
+it immediately (it re-injects the rules) or just start a new session.
+
 Pick up file edits with `/plugin` → update. End-to-end verification lives in
 `docs/DOGFOODING.md`.
 
@@ -313,9 +326,10 @@ By default each reply glosses the **single** most central concept. To allow more
 ```
 
 Capped at 5 — past that a reply is a glossary. The number lives in
-`.vibe-vocab-rate` at the project root and applies from the next session; run
-`/vocab on` again to apply it immediately. The harvester's safety cap rises with
-it, so the extra glosses still get logged.
+`.vibe-vocab-rate` at the project root and applies from the next session;
+re-run `/vocab rate` to apply it to the current session (the command re-injects
+the rules). The harvester's safety cap rises with it, so the extra glosses still
+get logged.
 
 ### How specialized a term has to be
 
@@ -330,7 +344,7 @@ A beginner and a senior want different words glossed. `/vocab level` shifts that
 `mid` is the shipped behaviour, so not setting it changes nothing. On `advanced`
 Claude holds back rather than reaching for a term to fill the slot. The value
 lives in `.vibe-vocab-level` (add `always` for the global one), applies from the
-next session, and `/vocab on` applies it now.
+next session, and re-running `/vocab level` applies it now.
 
 ### Words you already know
 
@@ -380,13 +394,13 @@ npm test
 Runs harvest, dedupe, report, and multi-language checks offline. No Claude Code
 needed.
 
-### Known limits (v0.2)
+### Known limits (v0.3)
 
 - Only first mentions that match `term（short gloss）` with a non-ASCII character in the gloss get harvested. Terms introduced some other way stay out of the log — though you still read them.
 - Term extraction grabs up to 4 words before the parenthesis, so unusual phrasing can clip a multi-word term.
 - A parenthetical after a bare all-caps acronym (`DPO`, `API`, `SLA`, …) is treated as an expansion/label, not vocabulary, and is skipped — as are glosses in bold run-in headers or box-drawing table cells.
 - "Already learned → use bare" works off the most recent 120 terms in the log, injected at session start. An older term that gets re-glossed is de-duplicated by the harvester (no repeat row), but you might see the gloss once more.
-- How many terms per reply is set by `/vocab rate` (default 1, capped at 5); *which* term still rides on prompt control and needs tuning against real use — see `docs/DOGFOODING.md`.
+- How many terms per reply is set by `/vocab rate` (default 1, capped at 5); *which* term still rides on prompt control and needs tuning against real use — see `docs/DOGFOODING.md`. The "gloss every bullet of a key-points list" habit is now called out explicitly in the rules, but still wants real-use verification.
 
 ### How the prompt was chosen
 

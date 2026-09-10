@@ -4,6 +4,11 @@
 //   - global opt-in:   $CLAUDE_CONFIG_DIR/.vibe-vocab-always   (default ~/.claude)
 //   - this project:    <cwd>/.vibe-vocab-on
 // Never blocks session start: any failure exits 0 silently.
+//
+// Also invoked on demand by `/vocab` (see commands/vocab.md): when a setting is
+// changed mid-session the SessionStart hook has already run, so the command
+// re-runs this script with the project dir as argv[2] to re-emit the current
+// override blocks. Hence the `process.argv[2]` fallback for `cwd` below.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -18,7 +23,7 @@ try {
     }
   })();
 
-  const cwd = input.cwd || process.cwd();
+  const cwd = input.cwd || process.argv[2] || process.cwd();
   const claudeDir =
     process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
   const globalFlag = path.join(claudeDir, '.vibe-vocab-always');
@@ -63,7 +68,10 @@ try {
       `concept gets the slot" bar, gloss each once on first use, and rewrite the rest ` +
       `in the user's language. Fewer than ${rate} is fine when the reply doesn't ` +
       `genuinely turn on that many. Every other rule is unchanged — never in code, ` +
-      `comments, headings, or identifiers; one gloss per concept; bare on reuse.\n`;
+      `comments, headings, or identifiers; one gloss per concept; bare on reuse. In ` +
+      `particular the higher budget does **not** license a term-by-term glossary: ` +
+      `the "glossary-bullet trap" note still holds, glosses go in prose, and a ` +
+      `\`- **term（释义）** — …\` list is still zero glosses no matter the budget.\n`;
   }
 
   // Vocabulary level: shifts the "which concept gets the slot" bar. Default
@@ -98,7 +106,10 @@ try {
       `\`back-pressure\`, \`quorum\`, \`monomorphization\`, \`bitemporal\`, ` +
       `\`referential transparency\`). Most replies will gloss nothing, and that is ` +
       `correct — do not reach for a term just to fill the slot. When you do gloss, ` +
-      `all other rules are unchanged.\n`;
+      `all other rules are unchanged. Watch the "glossary-bullet trap" especially: ` +
+      `at this level a "关键点 / key points" list explaining several ideas almost ` +
+      `always warrants **no** gloss at all — leave the whole list in the user's ` +
+      `language.\n`;
   }
 
   // Already-learned terms: everything in vocab-log.md (most recent first) plus

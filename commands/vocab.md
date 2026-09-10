@@ -15,62 +15,34 @@ Print its stdout to the user verbatim — no summarizing, no rephrasing, no extr
 commentary. If it errors, show the raw error and suggest running the same
 command by hand from a regular terminal.
 
-## Step 2 — only if the argument is `on`
+## Step 2 — re-apply the settings to THIS session
 
-The `report.js` call above wrote the persistence flag, but that only injects the
-rules at the *start* of future sessions. To make VibeVocab take effect **right
-now**, also read `${CLAUDE_PLUGIN_ROOT}/rules/vibe-vocab.md` and follow those
-rules for the rest of this session. Check the project root (and
-`$CLAUDE_CONFIG_DIR`) for these flag files and honour them too:
+`report.js` only writes flag files; the `SessionStart` hook that turns them into
+context has already run, so a bare `report.js` call would not take effect until
+the next session. Close that gap now.
 
-- `.vibe-vocab-rate` — the integer is the per-reply gloss budget (else 1).
-- `.vibe-vocab-level` — `beginner` / `advanced` shifts the "which concept gets
-  the slot" bar (see the `level` step below); absent or `mid` = the shipped rule.
-- `.vibe-vocab-known` — treat every term listed there (and every term already in
-  `vocab-log.md`) as already-learned: use it bare, no gloss.
+**If the argument is `on`, `rate`, `level`, `know`, `forget`, or `focus`:** run
 
-Then tell the user, in one line, that VibeVocab is now active for this session.
+```
+node "${CLAUDE_PLUGIN_ROOT}/scripts/session-start.js" "${CLAUDE_PROJECT_DIR}"
+```
 
-Note: a brand-new session is the reliable way to pick up flag changes — the
-SessionStart hook re-reads all of them and re-injects the override blocks.
+This re-emits the full VibeVocab ruleset plus the current override blocks
+(per-reply budget, vocabulary level, already-learned terms) — exactly what the
+next session would start with. Treat its stdout as the **authoritative**
+VibeVocab instructions for the rest of this session, replacing anything injected
+at session start. If it prints nothing, VibeVocab is not enabled for this
+project (only `/vocab on` changes that) — say so.
 
-## Step 2 — only if the argument is `rate`
+Then tell the user, in one line, what is now in effect (e.g. "VibeVocab active,
+gloss budget 3, level advanced").
 
-`report.js` saved the new budget for future sessions. To apply it now, re-read
-`${CLAUDE_PLUGIN_ROOT}/rules/vibe-vocab.md` and for the rest of this session
-treat the per-reply gloss limit as the number the user just set (clamped to
-1–5), not 1 — pick that many of the most central concepts, gloss each once, all
-other rules unchanged. Tell the user in one line.
+**If the argument is `off`:** stop following the VibeVocab rules for the rest of
+this session and behave as the default assistant. `report.js` already removed
+the flag for future sessions. (No re-inject — there is nothing to apply.)
 
-## Step 2 — only if the argument is `level`
-
-`report.js` saved the level for future sessions. To apply it now, shift the
-"which concept gets the slot" bar for the rest of this session:
-
-- `beginner` — an everyday engineering term (`deploy`, `dependency`, `cache`,
-  `race condition`, `endpoint`, …) is worth the one gloss slot when it's central
-  to the reply, not only the rare ones.
-- `mid` — the shipped rule, unchanged: a term the user likely half-knows.
-- `advanced` — only a genuinely specialized or precise term earns the slot;
-  ordinary vocabulary they already use fluently does not. Most replies gloss
-  nothing, which is correct.
-
-The one-gloss-per-reply budget (or the `/vocab rate` value) and every other rule
-are unchanged. Tell the user in one line.
-
-## Step 2 — only if the argument is `off`
-
-Stop following the VibeVocab rules for the rest of this session (behave as the
-default assistant). The `report.js` call already removed the flag for future
-sessions.
-
-## Step 2 — only if the argument is `know` or `forget`
-
-`report.js` updated `.vibe-vocab-known` for future sessions. For the rest of
-**this** session, adjust your working set of already-learned terms to match:
-after `know`, treat the named terms (or every term in the named word pack) as
-already-learned — use them bare, no gloss. After `forget`, they become eligible
-for a first-use gloss again. Tell the user in one line what changed.
+Note: starting a brand-new session does all of the above automatically; the
+re-inject just spares you the restart.
 
 ## Argument reference (for your understanding; don't explain unless asked)
 
