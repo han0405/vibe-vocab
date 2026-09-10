@@ -112,6 +112,17 @@ execFileSync('node', [path.join(root, 'scripts/report.js'), tmp, 'off'], {
 ok(!fs.existsSync(path.join(tmp, '.vibe-vocab-on')), '/vocab off removes .vibe-vocab-on');
 ok(runStart().trim() === '', 'session-start silent again after /vocab off');
 
+// 7. non-Chinese scripts: harvest the gloss straight from the library
+const { harvestGlossedTerms } = require(path.join(root, 'lib/vocab-store.js'));
+const ja = harvestGlossedTerms('このエンドポイントは idempotent（冪等）にする必要があります。');
+ok(ja.length === 1 && ja[0].term === 'idempotent' && ja[0].gloss === '冪等', 'Japanese gloss harvested');
+const ko = harvestGlossedTerms('이 엔드포인트는 retry(재시도)로 처리해야 합니다.');
+ok(ko.length === 1 && ko[0].term === 'retry' && ko[0].gloss === '재시도', 'Korean gloss harvested');
+const acr = harvestGlossedTerms('这个接口要保证 idempotent（同一 HTTP 请求）的效果。');
+ok(acr.length === 1 && acr[0].term === 'idempotent', 'gloss with a short all-caps acronym (HTTP) survives');
+const hi = harvestGlossedTerms('यह फ़ंक्शन अब idempotent (एक जैसा असर) है। आगे टेस्ट जोड़ें।');
+ok(hi.length === 1 && !/जोड़ें/.test(hi[0].context), 'Hindi context stops at the danda, not the paragraph');
+
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(failures ? `\n${failures} FAILURE(S)` : '\nAll green.');
 process.exit(failures ? 1 : 0);
