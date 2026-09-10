@@ -14,114 +14,11 @@
 
 <p align="center">
   🌐 <strong>Languages · 语言</strong>:
-  <a href="#中文"><strong>🇨🇳 中文</strong></a> ·
   <a href="#english"><strong>🇬🇧 English</strong></a> ·
+  <a href="#中文"><strong>🇨🇳 中文</strong></a> ·
   <a href="docs/i18n/README.ja.md">🇯🇵 日本語</a> ·
   <a href="docs/i18n/README.ko.md">🇰🇷 한국어</a>
 </p>
-
----
-
-## 中文
-
-### 一句话
-
-用中文 vibe coding，Claude 照常干活。唯一的区别：每条回复里**最关键的那个概念**，Claude 保留英文术语，第一次出现时补一句极简中文注释，之后就直接裸用——你靠上下文认它。在真实语境里学技术英语，零额外时间。
-
-### 有什么变化
-
-同一个问题：**「我的模型训练集 99%，测试集只有 70%，怎么办？」**
-
-<table>
-<tr>
-<td width="50%">
-
-#### 普通 Claude Code
-
-> 这是典型的**过拟合**。训练集表现好、测试集掉这么多，说明模型把训练数据里的噪声也学进去了。可以加**正则化**、开**早停**，或者做**数据增强**，另外也建议检查一下训练集和测试集的分布是否一致……
-
-诊断没问题，代码也能用。但术语全是中文——下次读英文文档、看报错、听 podcast，还是得从头查一遍。
-
-</td>
-<td width="50%">
-
-#### 开了 VibeVocab
-
-> 这是典型的 **overfitting（过拟合）**：模型把训练集的噪声也背下来了。
->
-> 1. 给这几层加 L2 正则，`weight_decay=1e-4` 起步
-> 2. 开早停，盯 validation loss 而不是 train loss
-> 3. 还不行就上数据增强
->
-> 下一步：把现在的 train/val loss 曲线贴给我。
-
-同样的诊断 + `overfitting` 这个词，连同它出现的那句真话一起进 `vocab-log.md`。
-下次 Claude 直接写 `overfitting`，因为你已经见过了。
-
-</td>
-</tr>
-</table>
-
-右边**只标了一个词**：`正则化`、`早停`、`数据增强` 都还是中文。默认一条回复只挑最核心的那个概念；想多学几个，`/vocab rate` 可放宽到最多 5 个。
-
-没有独立 App，没有背单词时段，不打断心流——后台一个 hook 把 `术语（注释）` 悄悄收进项目根目录的 `vocab-log.md`。
-
-### 为什么有用
-
-- **零额外时间** —— 你在写代码，不是在背单词。
-- **带语境** —— 记住的是「模型把噪声也背下来了，这叫 overfitting」，不是「overfitting = 过拟合」。
-- **符合习得规律** —— 只在第一次解释，之后逼你在真实使用里回忆，而不是刷卡片。
-- **可复习** —— `vocab-log.md` 是一张 Markdown 表，`/vocab export` 一键导进 Anki。
-
-完整规则在 `rules/vibe-vocab.md`（启用时自动注入会话）：每条回复只给**最核心的**概念保留英文 + 首次一句注释，之后裸用；代码、注释、标题里永远不标。
-
-### 安装
-
-```
-/plugin marketplace add /path/to/vibe-vocab
-/plugin install vibe-vocab@vibe-vocab-local
-/vocab on
-```
-
-- `/vocab on` 对当前项目启用，当前会话立即生效；`/vocab on always` 全局启用。
-- `/vocab off` 关闭。想临时安静一会儿，直接说「别标注」或「focus」。
-- 从**项目根目录**启动 `claude`——`vocab-log.md` 和配置文件都落在启动目录，不向子目录继承。
-- 改了插件文件后 `/plugin` → update。
-
-### 用在 Codex CLI 上
-
-Codex 没有插件市场，但同一套核心逻辑能跑。装一次：
-
-```
-git clone https://github.com/han0405/vibe-vocab
-cd vibe-vocab && npm run codex:install
-```
-
-这会做三件事：把 `/vocab` 命令装进 `~/.codex/prompts/`；在 `~/.codex/config.toml`
-里加一行 `notify`，让每轮结束后 `codex/notify.js` 收词并刷新 `AGENTS.md`；给当前项目
-写好 `AGENTS.md` 里的托管块。之后重启 Codex，在项目里 `/vocab on` 即可。
-
-- 规则通过项目 `AGENTS.md` 里 `<!-- VIBEVOCAB:START -->` … `END` 之间的托管块注入，
-  块外内容不动；`/vocab off` 会移除该块。
-- `notify` 是 Codex 的全局单槽。已经用了 `notify`？装脚本会提示你怎么串联，不会覆盖。
-- `rate` / `level` / 已学词表在**下次会话**生效（和 Claude 版的 SessionStart 时机一致）。
-
-### 调节
-
-| 命令 | 作用 |
-|---|---|
-| `/vocab` | 看生词本摘要：数量、模式、当前设置 |
-| `/vocab rate <1-5>` | 一条回复标几个词（默认 1，上限 5——再多就成单词表） |
-| `/vocab level <beginner\|mid\|advanced>` | 门槛：日常工程词也标 / 你「大概见过」的词（默认）/ 只标真正专业的词 |
-| `/vocab know <词…>` · `/vocab forget <词…>` | 标记「早就会了、永不标注」/ 撤销；`/vocab know backend` 可标记整个词包 |
-| `/vocab focus <领域>` | 主动模式：Claude 主动找机会用该词包的词（`frontend` `backend` `ml` `or-stats` `devops`）；`/vocab focus off` 退出 |
-| `/vocab export` | 写出 `vocab-anki.csv`，导入 Anki / Excel / Google Sheets |
-
-设置写在项目根目录，下次会话生效；想当场生效，把对应 `/vocab` 命令再跑一次。命令后加 `always` 存为所有项目的默认。进过 `vocab-log.md` 的词下次会话自动裸用，一般不用手动 `know`。
-
-### 为什么做这个
-
-Vibe coding 让写代码越来越轻松，但你依然整天泡在技术英语里——文档、报错、API 名字、模型解释你自己项目时用的词。与其背「overfitting = 过拟合」，不如在真正解决问题的时候遇到它，明天再遇到一次，慢慢就不用翻译了。写你的东西，英语顺手学会。
 
 ---
 
@@ -184,15 +81,15 @@ Full rules in `rules/vibe-vocab.md` (injected into the session when enabled): ea
 ### Install
 
 ```
-/plugin marketplace add /path/to/vibe-vocab
-/plugin install vibe-vocab@vibe-vocab-local
+/plugin marketplace add han0405/vibe-vocab
+/plugin install vibe-vocab@han0405
 /vocab on
 ```
 
 - `/vocab on` enables it for the current project, live in the current session; `/vocab on always` enables it globally.
 - `/vocab off` disables it. To go quiet for a bit, just say "focus" or "别标注".
 - Start `claude` at the **project root** — `vocab-log.md` and the config files land in the directory you start from and don't inherit into subdirectories.
-- After editing plugin files, `/plugin` → update.
+- Hacking on the plugin? Add a local clone instead — `/plugin marketplace add /path/to/vibe-vocab` — then `/plugin` → update after edits.
 
 ### With Codex CLI
 
@@ -232,6 +129,109 @@ Settings live at the project root and apply from the next session; to apply one 
 ### Why
 
 Vibe coding makes it easy to build without writing much code — but you're still swimming in technical English all day: docs, errors, API names, the words the model uses to explain your own project. So instead of memorising `overfitting = 过拟合`, you meet the word while fixing a real problem, see it again tomorrow, and eventually stop translating it. Build things; pick up the language along the way.
+
+---
+
+## 中文
+
+### 一句话
+
+用中文 vibe coding，Claude 照常干活。唯一的区别：每条回复里**最关键的那个概念**，Claude 保留英文术语，第一次出现时补一句极简中文注释，之后就直接裸用——你靠上下文认它。在真实语境里学技术英语，零额外时间。
+
+### 有什么变化
+
+同一个问题：**「我的模型训练集 99%，测试集只有 70%，怎么办？」**
+
+<table>
+<tr>
+<td width="50%">
+
+#### 普通 Claude Code
+
+> 这是典型的**过拟合**。训练集表现好、测试集掉这么多，说明模型把训练数据里的噪声也学进去了。可以加**正则化**、开**早停**，或者做**数据增强**，另外也建议检查一下训练集和测试集的分布是否一致……
+
+诊断没问题，代码也能用。但术语全是中文——下次读英文文档、看报错、听 podcast，还是得从头查一遍。
+
+</td>
+<td width="50%">
+
+#### 开了 VibeVocab
+
+> 这是典型的 **overfitting（过拟合）**：模型把训练集的噪声也背下来了。
+>
+> 1. 给这几层加 L2 正则，`weight_decay=1e-4` 起步
+> 2. 开早停，盯 validation loss 而不是 train loss
+> 3. 还不行就上数据增强
+>
+> 下一步：把现在的 train/val loss 曲线贴给我。
+
+同样的诊断 + `overfitting` 这个词，连同它出现的那句真话一起进 `vocab-log.md`。
+下次 Claude 直接写 `overfitting`，因为你已经见过了。
+
+</td>
+</tr>
+</table>
+
+右边**只标了一个词**：`正则化`、`早停`、`数据增强` 都还是中文。默认一条回复只挑最核心的那个概念；想多学几个，`/vocab rate` 可放宽到最多 5 个。
+
+没有独立 App，没有背单词时段，不打断心流——后台一个 hook 把 `术语（注释）` 悄悄收进项目根目录的 `vocab-log.md`。
+
+### 为什么有用
+
+- **零额外时间** —— 你在写代码，不是在背单词。
+- **带语境** —— 记住的是「模型把噪声也背下来了，这叫 overfitting」，不是「overfitting = 过拟合」。
+- **符合习得规律** —— 只在第一次解释，之后逼你在真实使用里回忆，而不是刷卡片。
+- **可复习** —— `vocab-log.md` 是一张 Markdown 表，`/vocab export` 一键导进 Anki。
+
+完整规则在 `rules/vibe-vocab.md`（启用时自动注入会话）：每条回复只给**最核心的**概念保留英文 + 首次一句注释，之后裸用；代码、注释、标题里永远不标。
+
+### 安装
+
+```
+/plugin marketplace add han0405/vibe-vocab
+/plugin install vibe-vocab@han0405
+/vocab on
+```
+
+- `/vocab on` 对当前项目启用，当前会话立即生效；`/vocab on always` 全局启用。
+- `/vocab off` 关闭。想临时安静一会儿，直接说「别标注」或「focus」。
+- 从**项目根目录**启动 `claude`——`vocab-log.md` 和配置文件都落在启动目录，不向子目录继承。
+- 改插件源码：改用本地路径 `/plugin marketplace add /path/to/vibe-vocab`，改完 `/plugin` → update。
+
+### 用在 Codex CLI 上
+
+Codex 没有插件市场，但同一套核心逻辑能跑。装一次：
+
+```
+git clone https://github.com/han0405/vibe-vocab
+cd vibe-vocab && npm run codex:install
+```
+
+这会做三件事：把 `/vocab` 命令装进 `~/.codex/prompts/`；在 `~/.codex/config.toml`
+里加一行 `notify`，让每轮结束后 `codex/notify.js` 收词并刷新 `AGENTS.md`；给当前项目
+写好 `AGENTS.md` 里的托管块。之后重启 Codex，在项目里 `/vocab on` 即可。
+
+- 规则通过项目 `AGENTS.md` 里 `<!-- VIBEVOCAB:START -->` … `END` 之间的托管块注入，
+  块外内容不动；`/vocab off` 会移除该块。
+- `notify` 是 Codex 的全局单槽。已经用了 `notify`？装脚本会提示你怎么串联，不会覆盖。
+- `rate` / `level` / 已学词表在**下次会话**生效（和 Claude 版的 SessionStart 时机一致）。
+
+### 调节
+
+| 命令 | 作用 |
+|---|---|
+| `/vocab` | 看生词本摘要：数量、模式、当前设置 |
+| `/vocab rate <1-5>` | 一条回复标几个词（默认 1，上限 5——再多就成单词表） |
+| `/vocab level <beginner\|mid\|advanced>` | 门槛：日常工程词也标 / 你「大概见过」的词（默认）/ 只标真正专业的词 |
+| `/vocab know <词…>` · `/vocab forget <词…>` | 标记「早就会了、永不标注」/ 撤销；`/vocab know backend` 可标记整个词包 |
+| `/vocab focus <领域>` | 主动模式：Claude 主动找机会用该词包的词（`frontend` `backend` `ml` `or-stats` `devops`）；`/vocab focus off` 退出 |
+| `/vocab export` | 写出 `vocab-anki.csv`，导入 Anki / Excel / Google Sheets |
+
+设置写在项目根目录，下次会话生效；想当场生效，把对应 `/vocab` 命令再跑一次。命令后加 `always` 存为所有项目的默认。进过 `vocab-log.md` 的词下次会话自动裸用，一般不用手动 `know`。
+
+### 为什么做这个
+
+Vibe coding 让写代码越来越轻松，但你依然整天泡在技术英语里——文档、报错、API 名字、模型解释你自己项目时用的词。与其背「overfitting = 过拟合」，不如在真正解决问题的时候遇到它，明天再遇到一次，慢慢就不用翻译了。写你的东西，英语顺手学会。
 
 ## License
 

@@ -75,15 +75,15 @@
 ### 설치
 
 ```
-/plugin marketplace add /path/to/vibe-vocab
-/plugin install vibe-vocab@vibe-vocab-local
+/plugin marketplace add han0405/vibe-vocab
+/plugin install vibe-vocab@han0405
 /vocab on
 ```
 
 - `/vocab on`은 현재 프로젝트에 활성화하고 현재 세션에서 바로 적용됩니다. `/vocab on always`는 전역 활성화.
 - `/vocab off`로 비활성화. 잠시 조용히 하려면 "주석 달지 마" 또는 "focus"라고 말하면 됩니다.
 - `claude`는 **프로젝트 루트**에서 실행하세요 —— `vocab-log.md`와 설정 파일은 실행한 디렉터리에 생기고, 하위 디렉터리로 상속되지 않습니다.
-- 플러그인 파일을 수정한 뒤에는 `/plugin` → update.
+- 플러그인을 직접 수정한다면 로컬 클론을 추가하세요: `/plugin marketplace add /path/to/vibe-vocab`, 편집 후 `/plugin` → update.
 
 ### 조정
 

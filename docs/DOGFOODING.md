@@ -9,7 +9,7 @@ In an interactive `claude` terminal:
 
 ```
 /plugin marketplace add D:/Project/vibe-vocab
-/plugin install vibe-vocab@vibe-vocab-local
+/plugin install vibe-vocab@han0405
 ```
 
 `/plugin` should now list `vibe-vocab` as enabled. After editing plugin files,
