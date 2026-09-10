@@ -1,9 +1,8 @@
 <p align="center">
-  <strong>VibeVocab</strong>
+  <img src="vocab.png" alt="VibeVocab — vibe-code in your language, pick up the English along the way" width="820">
 </p>
 <p align="center">
-  <strong>用母语 vibe coding，顺手把技术英语记下来。</strong><br>
-  <em>Vibe-code in your own language. Pick up the English for free.</em>
+  <em>用母语 vibe coding，顺手把技术英语记下来。</em>
 </p>
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" alt="License"></a>
@@ -119,6 +118,10 @@ cd vibe-vocab && npm run codex:install
 
 设置写在项目根目录，下次会话生效；想当场生效，把对应 `/vocab` 命令再跑一次。命令后加 `always` 存为所有项目的默认。进过 `vocab-log.md` 的词下次会话自动裸用，一般不用手动 `know`。
 
+### 为什么做这个
+
+Vibe coding 让写代码越来越轻松，但你依然整天泡在技术英语里——文档、报错、API 名字、模型解释你自己项目时用的词。与其背「overfitting = 过拟合」，不如在真正解决问题的时候遇到它，明天再遇到一次，慢慢就不用翻译了。写你的东西，英语顺手学会。
+
 ---
 
 ## English
@@ -224,6 +227,10 @@ Restart Codex, then `/vocab on` in a project.
 | `/vocab export` | Writes `vocab-anki.csv` for Anki / Excel / Google Sheets |
 
 Settings live at the project root and apply from the next session; to apply one now, re-run that `/vocab` command. Add `always` to make it the default for every project. Terms already in `vocab-log.md` go bare automatically next session — you rarely need `know`.
+
+### Why
+
+Vibe coding makes it easy to build without writing much code — but you're still swimming in technical English all day: docs, errors, API names, the words the model uses to explain your own project. So instead of memorising `overfitting = 过拟合`, you meet the word while fixing a real problem, see it again tomorrow, and eventually stop translating it. Build things; pick up the language along the way.
 
 ## License
 

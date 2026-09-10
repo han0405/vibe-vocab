@@ -1,8 +1,8 @@
 <p align="center">
-  <strong>VibeVocab</strong>
+  <img src="../../vocab.png" alt="VibeVocab — 모국어로 vibe coding 하면서 기술 영어를 익히세요" width="820">
 </p>
 <p align="center">
-  <strong>모국어로 vibe coding 하면서, 기술 영어를 자연스럽게 익히세요.</strong>
+  <em>모국어로 vibe coding 하면서, 기술 영어를 자연스럽게 익히세요.</em>
 </p>
 <p align="center">
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" alt="라이선스"></a>
@@ -96,6 +96,10 @@
 | `/vocab export` | `vocab-anki.csv` 내보내기 (Anki / Excel / Google Sheets 용) |
 
 설정은 프로젝트 루트에 저장되며 다음 세션부터 적용됩니다. 지금 적용하려면 해당 `/vocab` 명령을 다시 실행하세요. 명령에 `always`를 붙이면 모든 프로젝트의 기본값이 됩니다. `vocab-log.md`에 있는 용어는 다음 세션부터 자동으로 그대로 쓰이므로 `know`는 거의 필요 없습니다.
+
+### 왜 만들었나
+
+Vibe coding 덕분에 코드를 거의 쓰지 않고도 무언가를 만들 수 있게 됐습니다. 그래도 하루 종일 기술 영어에 둘러싸여 있죠 —— 문서, 에러, API 이름, 모델이 당신 프로젝트를 설명할 때 쓰는 단어들. "overfitting = 과적합"을 외우는 대신, 실제 문제를 풀다가 그 단어를 만나고, 내일 또 만나고, 어느새 번역하지 않게 됩니다. 만드세요. 언어는 그 과정에서 익히면 됩니다.
 
 ## 라이선스
 

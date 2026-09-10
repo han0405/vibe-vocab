@@ -1,8 +1,8 @@
 <p align="center">
-  <strong>VibeVocab</strong>
+  <img src="../../vocab.png" alt="VibeVocab — 母国語で vibe coding しながら、技術英語を身につける" width="820">
 </p>
 <p align="center">
-  <strong>母国語で vibe coding しながら、技術英語を自然に身につける。</strong>
+  <em>母国語で vibe coding しながら、技術英語を自然に身につける。</em>
 </p>
 <p align="center">
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat" alt="ライセンス"></a>
@@ -96,6 +96,10 @@
 | `/vocab export` | `vocab-anki.csv` を書き出し（Anki / Excel / Google Sheets 用） |
 
 設定はプロジェクトルートに保存され、次のセッションから有効になります。すぐ反映したいときは、その `/vocab` コマンドをもう一度実行してください。コマンドに `always` を付けると全プロジェクトのデフォルトになります。`vocab-log.md` にある用語は次のセッションから自動でそのまま使われるので、`know` はほとんど不要です。
+
+### なぜ作ったか
+
+Vibe coding のおかげで、ほとんどコードを書かずにものを作れるようになりました。それでも一日中、技術英語には触れ続けます——ドキュメント、エラー、API 名、モデルが自分のプロジェクトを説明するときの言葉。「overfitting = 過学習」と暗記する代わりに、実際に問題を解決している最中にその単語と出会い、翌日また出会い、やがて訳さなくなる。ものを作る。ついでに言葉も身につく。
 
 ## ライセンス
 
