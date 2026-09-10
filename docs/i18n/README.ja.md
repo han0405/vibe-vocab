@@ -11,12 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="../../README.md#中文" title="中文" aria-label="中文">🇨🇳</a> ·
-  <a href="../../README.md#english" title="English" aria-label="English">🇬🇧</a> ·
-  <a href="README.pt-BR.md" title="Português (Brasil)" aria-label="Português (Brasil)">🇧🇷</a> ·
-  <strong title="日本語" aria-label="日本語">🇯🇵</strong> ·
-  <a href="README.vi.md" title="Tiếng Việt" aria-label="Tiếng Việt">🇻🇳</a> ·
-  <a href="README.ko.md" title="한국어" aria-label="한국어">🇰🇷</a>
+  🌐 <strong>言語</strong>:
+  <a href="../../README.md#中文">🇨🇳 中文</a> ·
+  <a href="../../README.md#english">🇬🇧 English</a> ·
+  <strong>🇯🇵 日本語</strong> ·
+  <a href="README.ko.md">🇰🇷 한국어</a> ·
+  <a href="README.pt-BR.md">🇧🇷 Português (Brasil)</a> ·
+  <a href="README.vi.md">🇻🇳 Tiếng Việt</a>
 </p>
 
 ---
@@ -61,8 +62,8 @@
 </tr>
 </table>
 
-右側では**1つの単語だけ**に注釈が付いていることに注目してください：`正则化`、`早停`、`数据增强` はそのままです。これは意図的なものです——
-1回の回答につき、もっとも中心的な概念をひとつだけ選びます。全部に注釈を付けたら単語帳になってしまい、誰も読まなくなります。
+右側では**1つの単語だけ**に注釈が付いていることに注目してください：`正则化`、`早停`、`数据增强` はそのままです。これは**デフォルト**の動作です——
+1回の回答につき、もっとも中心的な概念をひとつだけ選びます。全部に注釈を付けたら単語帳になってしまい、誰も読まなくなります。1回の回答でもっと学びたいときは `/vocab rate` で最大5個まで緩められます（下記「1回答あたりの注釈数」を参照）。
 
 専用アプリはありません。単語学習の時間も取りません。作業の流れも妨げません。バックグラウンドの hook が `用語（注釈）` を
 静かに拾い集め、プロジェクトルートの `vocab-log.md` に記録します。
@@ -80,6 +81,8 @@
 
 > 各回答につき、**もっとも中心的な**概念ひとつだけ英語表記＋初出時に短い注釈を残し、それ以降はそのまま使う。
 > すべての用語に付けるわけではない——それでは単語帳になってしまう。コード・コメント・見出しには絶対に付けない。
+
+（`/vocab rate` で「ひとつ」を最大5個まで緩められます。詳細は下記。）
 
 ### 構成
 
@@ -108,7 +111,7 @@ Claude Code v2 には `/output-style` がないため、フラグファイル＋
 
 ### 3つのモード
 
-- **パッシブ（デフォルト）** —— 単語リストなし。Claude が会話の中から自分で選びます。1回答につき注釈は1つ。
+- **パッシブ（デフォルト）** —— 単語リストなし。Claude が会話の中から自分で選びます。1回答につき注釈は1つ（デフォルト。`/vocab rate` で変更可）。
 - **アクティブ** —— `/vocab focus backend` でその単語パックを `vocab-focus.md` に書き込み、Claude はそれらの用語を自然に使える機会を積極的に探します。`/vocab focus off` でパッシブに戻ります。
 - **ミュート** —— 「注釈は要らない」や "focus" と言えば現在のセッションだけ一時停止。`/vocab off` は今後のセッションでも無効にします。
 

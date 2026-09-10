@@ -11,12 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="../../README.md#中文" title="中文" aria-label="中文">🇨🇳</a> ·
-  <a href="../../README.md#english" title="English" aria-label="English">🇬🇧</a> ·
-  <a href="README.pt-BR.md" title="Português (Brasil)" aria-label="Português (Brasil)">🇧🇷</a> ·
-  <a href="README.ja.md" title="日本語" aria-label="日本語">🇯🇵</a> ·
-  <a href="README.vi.md" title="Tiếng Việt" aria-label="Tiếng Việt">🇻🇳</a> ·
-  <strong title="한국어" aria-label="한국어">🇰🇷</strong>
+  🌐 <strong>언어</strong>:
+  <a href="../../README.md#中文">🇨🇳 中文</a> ·
+  <a href="../../README.md#english">🇬🇧 English</a> ·
+  <a href="README.ja.md">🇯🇵 日本語</a> ·
+  <strong>🇰🇷 한국어</strong> ·
+  <a href="README.pt-BR.md">🇧🇷 Português (Brasil)</a> ·
+  <a href="README.vi.md">🇻🇳 Tiếng Việt</a>
 </p>
 
 ---
@@ -61,8 +62,8 @@
 </tr>
 </table>
 
-오른쪽에서는 **단어 하나에만** 주석이 붙어 있다는 점을 눈여겨보세요: `正则化`, `早停`, `数据增强`은 그대로입니다. 이건 의도된 것입니다 ——
-한 답변당 가장 핵심적인 개념 하나만 고릅니다. 전부 주석을 달면 단어장이 되어버리고, 아무도 읽지 않게 됩니다.
+오른쪽에서는 **단어 하나에만** 주석이 붙어 있다는 점을 눈여겨보세요: `正则化`, `早停`, `数据增强`은 그대로입니다. 이건 **기본값**입니다 ——
+한 답변당 가장 핵심적인 개념 하나만 고릅니다. 전부 주석을 달면 단어장이 되어버리고, 아무도 읽지 않게 됩니다. 한 답변에서 더 배우고 싶다면 `/vocab rate`로 최대 5개까지 늘릴 수 있습니다 (아래 「답변당 주석 개수」 참고).
 
 별도의 앱도, 단어 암기 시간도 없습니다. 작업 흐름도 끊기지 않습니다. 백그라운드 hook이 `용어(주석)`을
 조용히 모아서 프로젝트 루트의 `vocab-log.md`에 기록합니다.
@@ -80,6 +81,8 @@
 
 > 답변마다 **가장 핵심적인** 개념 하나만 영어로 남기고, 처음 등장할 때 짧은 주석을 한 번 달고, 이후로는 그대로 사용한다.
 > 모든 용어에 다는 게 아니다 —— 그러면 단어장이 된다. 코드, 주석, 제목에는 절대 달지 않는다.
+
+(`/vocab rate`로 이 "하나"를 최대 5개까지 늘릴 수 있습니다. 자세한 내용은 아래 참고.)
 
 ### 구성
 
@@ -108,7 +111,7 @@ Claude Code v2에는 `/output-style`이 없어서, 플래그 파일 + hook 방�
 
 ### 세 가지 모드
 
-- **패시브 (기본값)** —— 단어 목록 없이, Claude가 대화에서 직접 고릅니다. 답변당 주석 1개.
+- **패시브 (기본값)** —— 단어 목록 없이, Claude가 대화에서 직접 고릅니다. 답변당 주석 1개 (기본값이며 `/vocab rate`로 조정 가능).
 - **액티브** —— `/vocab focus backend`로 해당 단어팩을 `vocab-focus.md`에 기록하면, Claude가 그 용어들을 자연스럽게 쓸 기회를 적극적으로 찾습니다. `/vocab focus off`로 패시브로 돌아갑니다.
 - **뮤트** —— "주석 달지 마" / "focus"라고 하면 현재 세션만 일시 정지됩니다. `/vocab off`는 이후 세션까지 함께 끕니다.
 

@@ -11,12 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="../../README.md#中文" title="中文" aria-label="中文">🇨🇳</a> ·
-  <a href="../../README.md#english" title="English" aria-label="English">🇬🇧</a> ·
-  <strong title="Português (Brasil)" aria-label="Português (Brasil)">🇧🇷</strong> ·
-  <a href="README.ja.md" title="日本語" aria-label="日本語">🇯🇵</a> ·
-  <a href="README.vi.md" title="Tiếng Việt" aria-label="Tiếng Việt">🇻🇳</a> ·
-  <a href="README.ko.md" title="한국어" aria-label="한국어">🇰🇷</a>
+  🌐 <strong>Idiomas</strong>:
+  <a href="../../README.md#中文">🇨🇳 中文</a> ·
+  <a href="../../README.md#english">🇬🇧 English</a> ·
+  <a href="README.ja.md">🇯🇵 日本語</a> ·
+  <a href="README.ko.md">🇰🇷 한국어</a> ·
+  <strong>🇧🇷 Português (Brasil)</strong> ·
+  <a href="README.vi.md">🇻🇳 Tiếng Việt</a>
 </p>
 
 ---
@@ -61,8 +62,8 @@ Da próxima vez, o Claude já escreve `overfitting` direto — você já viu ess
 </tr>
 </table>
 
-Repare que **só um termo** foi anotado do lado direito: `正则化`, `早停` e `数据增强` continuam no idioma original. Isso é proposital —
-um conceito por resposta, o mais central. Anotar tudo vira um glossário, e ninguém lê glossário.
+Repare que **só um termo** foi anotado do lado direito: `正则化`, `早停` e `数据增强` continuam no idioma original. Esse é o **padrão** —
+um conceito por resposta, o mais central. Anotar tudo vira um glossário, e ninguém lê glossário. Quer aprender mais por resposta? O `/vocab rate` aumenta o limite para no máximo 5 (veja "Termos por resposta" abaixo).
 
 Sem aplicativo separado, sem sessão de estudo, sem interromper seu fluxo. Um hook em segundo plano coleta os pares `termo（nota）`
 silenciosamente para o `vocab-log.md`, na raiz do seu projeto.
@@ -80,6 +81,8 @@ Texto completo em `rules/vibe-vocab.md` (injetado na sessão pelo hook). O núcl
 
 > A cada resposta, mantenha o inglês + uma nota curta apenas para o conceito **mais central**, e use sem explicação depois disso.
 > Não é para marcar todo termo — isso vira glossário. Nunca em código, comentários ou títulos.
+
+(O `/vocab rate` pode elevar esse "um" para no máximo 5 — veja abaixo.)
 
 ### O que tem dentro
 
@@ -108,7 +111,7 @@ Depois de editar os arquivos do plugin, rode `/plugin` → update para aplicar. 
 
 ### Três modos
 
-- **Passivo (padrão).** Sem lista de palavras; o Claude escolhe a partir da conversa. Uma nota por resposta.
+- **Passivo (padrão).** Sem lista de palavras; o Claude escolhe a partir da conversa. Uma nota por resposta (o padrão; o `/vocab rate` ajusta).
 - **Ativo.** `/vocab focus backend` grava aquele pacote de termos em `vocab-focus.md`, e o Claude procura oportunidades naturais de usá-los. `/vocab focus off` volta ao modo passivo.
 - **Mudo.** "sem anotações" / "focus" pausa a sessão atual; `/vocab off` desativa também para as próximas.
 

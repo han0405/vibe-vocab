@@ -12,6 +12,7 @@
 </p>
 
 <p align="center">
+  🌐 <strong>Languages · 语言</strong>:
   <a href="#中文"><strong>🇨🇳 中文</strong></a> ·
   <a href="#english"><strong>🇬🇧 English</strong></a> ·
   <a href="docs/i18n/README.ja.md">🇯🇵 日本語</a> ·
@@ -64,8 +65,9 @@
 </tr>
 </table>
 
-注意右边**只有一个词**被标注了：`正则化`、`早停`、`数据增强` 都还是中文。这是故意的——
-一条回复只挑最核心的那个概念，标满了就成单词表了，没人看得进去。
+注意右边**只有一个词**被标注了：`正则化`、`早停`、`数据增强` 都还是中文。这是**默认**做法——
+一条回复只挑最核心的那个概念，标满了就成单词表了，没人看得进去。想一条回复多学几个，
+`/vocab rate` 可以放宽到最多 5 个（见下方「一段回复标几个词」）。
 
 没有独立 App，没有背单词时段，不打断心流。后台一个 hook 把 `术语（注释）`
 悄悄收进项目根目录的 `vocab-log.md`。
@@ -83,6 +85,8 @@
 
 > 每条回复，只给**最核心的一个**概念保留英文 + 首次一句简短注释，之后裸用。
 > 不是每个术语都标——那样就成了单词表。代码、注释、标题里永远不标。
+
+（`/vocab rate` 可以把「一个」放宽到最多 5 个，详见下文。）
 
 ### 组成
 
@@ -111,7 +115,7 @@ Claude Code v2 没有 `/output-style`，所以用「flag 文件 + hook」来激�
 
 ### 三种模式
 
-- **被动（默认）** —— 不带词表，Claude 从对话里自己挑。每条回复一个注释。
+- **被动（默认）** —— 不带词表，Claude 从对话里自己挑。每条回复一个注释（默认，`/vocab rate` 可调）。
 - **主动** —— `/vocab focus backend` 把该词包写进 `vocab-focus.md`，Claude 会主动找机会用上这些词。`/vocab focus off` 回到被动。
 - **静音** —— 「别标注」/「focus」暂停当前会话；`/vocab off` 对以后也一并关掉。
 
@@ -203,9 +207,10 @@ you've already seen it.
 </tr>
 </table>
 
-Note that **only one term** is glossed on the right. That's deliberate: one
+Note that **only one term** is glossed on the right. That's the **default**: one
 concept per reply, the most central one. Gloss everything and you've written a
-glossary, and nobody reads glossaries.
+glossary, and nobody reads glossaries. Want more per reply? `/vocab rate` raises
+it to at most 5 (see "Terms per reply" below).
 
 No separate app, no study sessions, nothing that breaks your flow. A background
 hook quietly harvests the `term（gloss）` pairs into `vocab-log.md` at the root of
@@ -226,6 +231,8 @@ core is one sentence:
 > Per reply, keep English + one short gloss for the **single** most central
 > concept, bare after that. Not every term — that's a glossary. Never in code,
 > comments, or headings.
+
+(`/vocab rate` can raise that "single" to at most 5 — see below.)
 
 ### What's in the box
 
@@ -255,7 +262,7 @@ Pick up file edits with `/plugin` → update. End-to-end verification lives in
 
 ### Three modes
 
-- **Passive (default).** No word list; Claude picks from the conversation. One gloss per reply.
+- **Passive (default).** No word list; Claude picks from the conversation. One gloss per reply (the default; `/vocab rate` adjusts it).
 - **Active.** `/vocab focus backend` writes that pack to `vocab-focus.md` and Claude looks for natural openings to use those terms. `/vocab focus off` to go back.
 - **Muted.** "别标注" / "focus" pauses the current session; `/vocab off` turns it off for future ones too.
 

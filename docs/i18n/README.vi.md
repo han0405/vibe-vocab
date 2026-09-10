@@ -11,12 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="../../README.md#中文" title="中文" aria-label="中文">🇨🇳</a> ·
-  <a href="../../README.md#english" title="English" aria-label="English">🇬🇧</a> ·
-  <a href="README.pt-BR.md" title="Português (Brasil)" aria-label="Português (Brasil)">🇧🇷</a> ·
-  <a href="README.ja.md" title="日本語" aria-label="日本語">🇯🇵</a> ·
-  <strong title="Tiếng Việt" aria-label="Tiếng Việt">🇻🇳</strong> ·
-  <a href="README.ko.md" title="한국어" aria-label="한국어">🇰🇷</a>
+  🌐 <strong>Ngôn ngữ</strong>:
+  <a href="../../README.md#中文">🇨🇳 中文</a> ·
+  <a href="../../README.md#english">🇬🇧 English</a> ·
+  <a href="README.ja.md">🇯🇵 日本語</a> ·
+  <a href="README.ko.md">🇰🇷 한국어</a> ·
+  <a href="README.pt-BR.md">🇧🇷 Português (Brasil)</a> ·
+  <strong>🇻🇳 Tiếng Việt</strong>
 </p>
 
 ---
@@ -61,8 +62,8 @@ Lần sau Claude sẽ viết thẳng `overfitting` — vì bạn đã thấy t�
 </tr>
 </table>
 
-Để ý rằng bên phải **chỉ có một từ** được chú thích: `正则化`, `早停`, `数据增强` vẫn giữ nguyên. Đây là cố ý —
-mỗi câu trả lời chỉ chọn một khái niệm trung tâm nhất. Chú thích hết thì thành một bảng từ vựng, và chẳng ai đọc bảng từ vựng cả.
+Để ý rằng bên phải **chỉ có một từ** được chú thích: `正则化`, `早停`, `数据增强` vẫn giữ nguyên. Đây là **mặc định** —
+mỗi câu trả lời chỉ chọn một khái niệm trung tâm nhất. Chú thích hết thì thành một bảng từ vựng, và chẳng ai đọc bảng từ vựng cả. Muốn học nhiều hơn mỗi câu trả lời? Dùng `/vocab rate` để nâng giới hạn lên tối đa 5 (xem "Số từ chú thích mỗi câu trả lời" bên dưới).
 
 Không cần app riêng, không có giờ học từ vựng, không làm gián đoạn mạch làm việc của bạn. Một hook chạy nền âm thầm thu thập các cặp `thuật ngữ（chú thích）`
 vào file `vocab-log.md` ở gốc dự án.
@@ -80,6 +81,8 @@ Bản đầy đủ ở `rules/vibe-vocab.md` (được hook đưa vào session).
 
 > Mỗi câu trả lời, chỉ giữ tiếng Anh + một chú thích ngắn cho **duy nhất một** khái niệm trung tâm nhất, sau đó dùng trần trụi.
 > Không phải thuật ngữ nào cũng chú thích — như vậy sẽ thành bảng từ vựng. Không bao giờ chú thích trong code, comment, hay tiêu đề.
+
+(`/vocab rate` có thể nâng "một" này lên tối đa 5 — xem bên dưới.)
 
 ### Cấu tạo
 
@@ -108,7 +111,7 @@ Sau khi chỉnh sửa file plugin, chạy `/plugin` → update để áp dụng.
 
 ### Ba chế độ
 
-- **Bị động (mặc định).** Không có danh sách từ; Claude tự chọn từ cuộc trò chuyện. Mỗi câu trả lời một chú thích.
+- **Bị động (mặc định).** Không có danh sách từ; Claude tự chọn từ cuộc trò chuyện. Mỗi câu trả lời một chú thích (mặc định; `/vocab rate` điều chỉnh được).
 - **Chủ động.** `/vocab focus backend` ghi bộ từ đó vào `vocab-focus.md`, Claude sẽ chủ động tìm cơ hội tự nhiên để dùng các từ đó. `/vocab focus off` để quay lại chế độ bị động.
 - **Im lặng.** "đừng chú thích" / "focus" tạm dừng session hiện tại; `/vocab off` tắt luôn cho cả các session sau.
 
